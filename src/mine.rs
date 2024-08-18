@@ -132,7 +132,7 @@ impl Miner {
             }
 
 
-            let compute_budget = 1_000_000;
+            let compute_budget = 950_000;
             // Build instruction set
             let mut ixs = vec![
                 coal_api::instruction::auth(ore_proof_pubkey(signer.pubkey())),

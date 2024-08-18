@@ -5,7 +5,7 @@ use crate::{
 
 impl Miner {
     pub async fn rewards(&self) {
-        let config = get_config(&self.rpc_client).await;
+        let config = get_config(&self.rpc_client, false).await;
         let base_reward_rate = config.base_reward_rate;
 
         let mut s = format!(

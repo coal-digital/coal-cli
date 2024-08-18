@@ -947,8 +947,6 @@ checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
 [[package]]
 name = "coal-api"
 version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c978460c01575f3f5372a7e5f392325eaf915f6b9d91e9e5322e92e0364913d6"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -982,6 +980,8 @@ dependencies = [
  "futures",
  "indicatif",
  "num_cpus",
+ "ore-api",
+ "ore-utils",
  "rand 0.8.5",
  "reqwest 0.12.4",
  "serde",
@@ -1002,8 +1002,6 @@ dependencies = [
 [[package]]
 name = "coal-utils"
 version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "004ef5c3b810336cc9ebbdc559692dfeed7a3a4f29a90b594ed477c389ea4b0b"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -2815,6 +2813,34 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "ore-api"
+version = "2.1.0"
+dependencies = [
+ "array-const-fn-init",
+ "bytemuck",
+ "const-crypto",
+ "drillx",
+ "mpl-token-metadata",
+ "num_enum 0.7.2",
+ "ore-utils",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "static_assertions",
+ "thiserror",
+]
+
+[[package]]
+name = "ore-utils"
+version = "2.1.0"
+dependencies = [
+ "bytemuck",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
 ]
 
 [[package]]

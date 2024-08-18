@@ -2,9 +2,7 @@ use std::{io::Read, time::Duration};
 
 use cached::proc_macro::cached;
 use coal_api::{
-    consts::{
-        CONFIG_ADDRESS, MINT_ADDRESS, PROOF, TOKEN_DECIMALS, TREASURY_ADDRESS
-    },
+    consts::*,
     state::{Config, Proof, Treasury},
 };
 use coal_utils::AccountDeserialize;
@@ -28,16 +26,16 @@ pub async fn _get_treasury(client: &RpcClient) -> Treasury {
     *Treasury::try_from_bytes(&data).expect("Failed to parse treasury account")
 }
 
-pub async fn get_config(client: &RpcClient) -> Config {
+pub async fn get_config(client: &RpcClient, ore: bool) -> Config {
     let data = client
-        .get_account_data(&CONFIG_ADDRESS)
+        .get_account_data(&if ore { ORE_CONFIG_ADDRESS } else { CONFIG_ADDRESS })
         .await
         .expect("Failed to get config account");
     *Config::try_from_bytes(&data).expect("Failed to parse config account")
 }
 
-pub async fn get_proof_with_authority(client: &RpcClient, authority: Pubkey) -> Proof {
-    let proof_address = proof_pubkey(authority);
+pub async fn get_proof_with_authority(client: &RpcClient, authority: Pubkey, ore: bool) -> Proof {
+    let proof_address = if ore { ore_proof_pubkey(authority) } else { proof_pubkey(authority) };
     get_proof(client, proof_address).await
 }
 
@@ -45,9 +43,13 @@ pub async fn get_updated_proof_with_authority(
     client: &RpcClient,
     authority: Pubkey,
     lash_hash_at: i64,
+    ore: bool,
 ) -> Proof {
     loop {
-        let proof = get_proof_with_authority(client, authority).await;
+        println!("Fetching proof loop");
+        let proof = get_proof_with_authority(client, authority, ore).await;
+        println!("proof.last_hash_at {:?}", proof.last_hash_at);
+        println!("lash_hash_at {:?}", lash_hash_at);
         if proof.last_hash_at.gt(&lash_hash_at) {
             return proof;
         }
@@ -128,10 +130,10 @@ pub fn proof_pubkey(authority: Pubkey) -> Pubkey {
     Pubkey::find_program_address(&[PROOF, authority.as_ref()], &coal_api::ID).0
 }
 
-// #[cached]
-// pub fn ore_proof_pubkey(authority: Pubkey) -> Pubkey {
-//     Pubkey::find_program_address(&[PROOF, authority.as_ref()], &ORE_PROGRAM_ID).0
-// }
+#[cached]
+pub fn ore_proof_pubkey(authority: Pubkey) -> Pubkey {
+    Pubkey::find_program_address(&[PROOF, authority.as_ref()], &ORE_PROGRAM_ID).0
+}
 
 #[cached]
 pub fn treasury_tokens_pubkey() -> Pubkey {

@@ -70,14 +70,14 @@ pub struct MineArgs {
     )]
     pub buffer_time: u64,
 
-    // #[arg(
-    //     long,
-    //     short,
-    //     value_name = "COAL",
-    //     help = "Whether to also mine COAL.",
-    //     default_value = "false"
-    // )]
-    // pub with_ore: bool,
+    #[arg(
+        long,
+        short,
+        value_name = "COAL",
+        help = "Whether to also mine COAL.",
+        default_value = "false"
+    )]
+    pub ore: bool,
 }
 
 #[derive(Parser, Debug)]

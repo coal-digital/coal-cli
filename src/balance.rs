@@ -22,7 +22,7 @@ impl Miner {
         } else {
             signer.pubkey()
         };
-        let proof = get_proof_with_authority(&self.rpc_client, address).await;
+        let proof = get_proof_with_authority(&self.rpc_client, address, false).await;
         let token_account_address = spl_associated_token_account::get_associated_token_address(
             &address,
             &coal_api::consts::MINT_ADDRESS,

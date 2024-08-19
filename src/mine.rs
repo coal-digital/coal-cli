@@ -32,8 +32,8 @@ impl Miner {
     pub async fn mine(&self, args: MineArgs) {
         // Open account, if needed.
         let signer = self.signer();
-        self.open().await;
-        println!("Opened account(s)");
+        self.open(args.merged).await;
+
         // Check num threads
         self.check_num_cores(args.cores);
 
@@ -43,24 +43,17 @@ impl Miner {
         let mut last_ore_hash_at = 0;
         let mut last_ore_balance = 0;
         loop {
-            println!("Mining loop");
             // Fetch coal_proof
             let (coal_config, ore_config) = tokio::join!(
                 get_config(&self.rpc_client, false),
                 get_config(&self.rpc_client, true)
             );
-
-            let (coal_proof, ore_proof) = tokio::join!(
-                get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_coal_hash_at, false),
-                get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_ore_hash_at, true)
-            );
-
-            let is_mining_merged = coal_proof.last_hash_at.eq(&ore_proof.last_hash_at) && coal_proof.challenge.eq(&ore_proof.challenge);
-            println!("is_mining_merged: {}", is_mining_merged);
-            println!("coal_proof.last_hash_at: {}", coal_proof.last_hash_at);
-            println!("ore_proof.last_hash_at: {}", ore_proof.last_hash_at);
-            println!("coal_proof.challenge: {:?}", coal_proof.challenge);
-            println!("ore_proof.challenge: {:?}", ore_proof.challenge);
+            let coal_proof = get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_coal_hash_at, false).await;
+            let ore_proof = if args.merged { 
+                get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_ore_hash_at, true).await 
+            } else { 
+                coal_proof
+            };
 
             println!(
                 "\n\nStake: {} COAL\n{}  Multiplier: {:12}x",
@@ -76,19 +69,22 @@ impl Miner {
                 calculate_multiplier(coal_proof.balance, coal_config.top_balance)
             );
 
-            println!(
-                "\n\nStake: {} ORE\n{}  Multiplier: {:12}x",
-                amount_u64_to_string(coal_proof.balance),
-                if last_ore_hash_at.gt(&0) {
-                    format!(
-                        "  Change: {} ORE\n",
-                        amount_u64_to_string(coal_proof.balance.saturating_sub(last_ore_balance))
-                    )
-                } else {
-                    "".to_string()
-                },
-                calculate_multiplier(ore_proof.balance, ore_config.top_balance)
-            );
+            if args.merged {
+                println!(
+                    "\n\nStake: {} ORE\n{}  Multiplier: {:12}x",
+                    amount_u64_to_string(coal_proof.balance),
+                    if last_ore_hash_at.gt(&0) {
+                        format!(
+                            "  Change: {} ORE\n",
+                            amount_u64_to_string(coal_proof.balance.saturating_sub(last_ore_balance))
+                        )
+                    } else {
+                        "".to_string()
+                    },
+                    calculate_multiplier(ore_proof.balance, ore_config.top_balance)
+                );
+            }
+            
 
             last_coal_hash_at = coal_proof.last_hash_at;
             last_coal_balance = coal_proof.balance;
@@ -99,59 +95,43 @@ impl Miner {
             let cutoff_time = self.get_cutoff(coal_proof, args.buffer_time).await;
 
             // Run drillx
-            let (coal_solution, ore_solution) = if is_mining_merged {
-                let min_difficulty = coal_config.min_difficulty.min(ore_config.min_difficulty);
-                let solution = Self::find_hash_par(coal_proof, cutoff_time, args.cores, min_difficulty as u32)
-                    .await;
-                (solution, solution)
-            } else {
-                let (coal_solution, ore_solution) = tokio::join!(
-                    Self::find_hash_par(coal_proof, cutoff_time, args.cores.saturating_div(2), coal_config.min_difficulty as u32),
-                    Self::find_hash_par(ore_proof, cutoff_time, args.cores.saturating_div(2), ore_config.min_difficulty as u32)
-                );
-                (coal_solution, ore_solution)
+            let min_difficulty = if args.merged { 
+                coal_config.min_difficulty.min(ore_config.min_difficulty) 
+            } else { 
+                coal_config.min_difficulty 
             };
+            let solution = Self::find_hash_par(coal_proof, cutoff_time, args.cores, min_difficulty as u32)
+                .await;
 
-            // Check if reset is needed
-            // We need to do this first to keep the compute budget low
-            let mut compute_budget = 0;
-            let mut ixs = vec![];
+
+            let mut compute_budget = 500_000;
+            // Build instruction set
+            let mut ixs = vec![
+                ore_api::instruction::auth(ore_proof_pubkey(signer.pubkey())),
+                coal_api::instruction::auth(proof_pubkey(signer.pubkey())),
+            ];
+
+            if args.merged {
+                compute_budget += 500_000;
+                ixs.push(ore_api::instruction::mine(
+                    signer.pubkey(),
+                    signer.pubkey(),
+                    self.find_bus(true).await,
+                    solution,
+                ));
+            }
 
             if self.should_reset(coal_config).await {
                 compute_budget += 100_000;
                 ixs.push(coal_api::instruction::reset(signer.pubkey()));
             }
 
-            if self.should_reset(ore_config).await {
-                compute_budget += 100_000;
-                ixs.push(ore_api::instruction::reset(signer.pubkey()));
-            }
-
-            if !ixs.is_empty() {
-                self.send_and_confirm(&ixs, ComputeBudget::Fixed(compute_budget), false).await.ok();
-            }
-
-
-            let compute_budget = 950_000;
-            // Build instruction set
-            let mut ixs = vec![
-                coal_api::instruction::auth(ore_proof_pubkey(signer.pubkey())),
-                coal_api::instruction::auth(proof_pubkey(signer.pubkey())),
-            ];
-
-            ixs.push(ore_api::instruction::mine(
-                signer.pubkey(),
-                signer.pubkey(),
-                self.find_bus(true).await,
-                ore_solution,
-            ));
-
             // Build mine ix
             ixs.push(coal_api::instruction::mine(
                 signer.pubkey(),
                 signer.pubkey(),
                 self.find_bus(false).await,
-                coal_solution,
+                solution,
             ));
 
             // Submit transactions

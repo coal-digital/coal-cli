@@ -73,11 +73,11 @@ pub struct MineArgs {
     #[arg(
         long,
         short,
-        value_name = "COAL",
-        help = "Whether to also mine COAL.",
+        value_name = "MERGED",
+        help = "Whether to also mine ORE.",
         default_value = "false"
     )]
-    pub ore: bool,
+    pub merged: bool,
 }
 
 #[derive(Parser, Debug)]

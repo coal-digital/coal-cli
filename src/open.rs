@@ -8,7 +8,7 @@ use crate::{
 };
 
 impl Miner {
-    pub async fn open(&self, merged: bool) -> Result<bool, String> {
+    pub async fn open(&self, merged: bool) -> Result<bool, &str> {
         // Return early if miner is already registered
         let signer = self.signer();
         let fee_payer = self.fee_payer();
@@ -40,8 +40,7 @@ impl Miner {
 
             // Close the proofs if they do not match and reopen them            
             if coal_proof_result.is_ok() || ore_proof_result.is_ok() {
-                println!("Please close your ORE and COAL accounts before opening a merged account.");
-                return Err("Accounts already open".to_string());
+                return Err("Please close your ORE and COAL accounts before opening a merged account.");
             }
 
             println!("Opening COAL account...");

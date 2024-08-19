@@ -121,7 +121,7 @@ impl Miner {
                 ));
             }
 
-            if self.should_reset(coal_config).await {
+            if self.should_reset(coal_config).await && rand::thread_rng().gen_range(0..10).eq(&0) {
                 compute_budget += 100_000;
                 ixs.push(coal_api::instruction::reset(signer.pubkey()));
             }

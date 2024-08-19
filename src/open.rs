@@ -8,7 +8,7 @@ use crate::{
 };
 
 impl Miner {
-    pub async fn open(&self, merged: bool) {
+    pub async fn open(&self, merged: bool) -> Result<bool, String> {
         // Return early if miner is already registered
         let signer = self.signer();
         let fee_payer = self.fee_payer();
@@ -34,14 +34,14 @@ impl Miner {
 
                 if coal_proof.last_hash.eq(&ore_proof.last_hash) && coal_proof.challenge.eq(&ore_proof.challenge) {
                     // Proofs are already merged
-                    return;
+                    return Ok(true);
                 }
             }
 
             // Close the proofs if they do not match and reopen them            
             if coal_proof_result.is_ok() || ore_proof_result.is_ok() {
                 println!("Please close your ORE and COAL accounts before opening a merged account.");
-                return;
+                return Err("Accounts already open".to_string());
             }
 
             println!("Opening COAL account...");
@@ -53,12 +53,15 @@ impl Miner {
             println!("Opening COAL account...");
             ix.push(coal_api::instruction::open(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()));
         } else {
-            return;
+            return Ok(true);
         }
 
         // Sign and send transaction.        
         self.send_and_confirm(&ix, ComputeBudget::Fixed(compute_budget), false)
             .await
             .expect("Failed to open account(s)");
+
+    
+        Ok(true)
     }
 }

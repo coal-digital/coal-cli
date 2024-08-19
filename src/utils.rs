@@ -46,10 +46,7 @@ pub async fn get_updated_proof_with_authority(
     ore: bool,
 ) -> Proof {
     loop {
-        println!("Fetching proof loop");
         let proof = get_proof_with_authority(client, authority, ore).await;
-        println!("proof.last_hash_at {:?}", proof.last_hash_at);
-        println!("lash_hash_at {:?}", lash_hash_at);
         if proof.last_hash_at.gt(&lash_hash_at) {
             return proof;
         }

@@ -32,7 +32,11 @@ impl Miner {
     pub async fn mine(&self, args: MineArgs) {
         // Open account, if needed.
         let signer = self.signer();
-        self.open(args.merged).await;
+        let result = self.open(args.merged).await;
+        if result.is_err() {
+            println!("{}", result.err().unwrap());
+            return;
+        }
 
         // Check num threads
         self.check_num_cores(args.cores);
@@ -121,7 +125,7 @@ impl Miner {
                 ));
             }
 
-            if self.should_reset(coal_config).await && rand::thread_rng().gen_range(0..10).eq(&0) {
+            if self.should_reset(coal_config).await && rand::thread_rng().gen_range(0..8).eq(&0) {
                 compute_budget += 100_000;
                 ixs.push(coal_api::instruction::reset(signer.pubkey()));
             }

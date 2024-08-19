@@ -34,7 +34,7 @@ impl Miner {
         let signer = self.signer();
         let result = self.open(args.merged).await;
         if result.is_err() {
-            println!("{}", result.err().unwrap());
+            println!("{} {}", "ERROR".bold().red(), result.err().unwrap());
             return;
         }
 

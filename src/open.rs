@@ -8,7 +8,7 @@ use crate::{
 };
 
 impl Miner {
-    pub async fn open(&self, merged: bool) -> Result<bool, &str> {
+    pub async fn open(&self, merged: String) -> Result<bool, &str> {
         // Return early if miner is already registered
         let signer = self.signer();
         let fee_payer = self.fee_payer();
@@ -24,7 +24,7 @@ impl Miner {
             self.rpc_client.get_account(&ore_proof_address)
         );
 
-        if merged {
+        if merged == "ore" {
             // For merged mining we need to ensure both are closed if the proofs are not already merged
             if ore_proof_result.is_ok() && coal_proof_result.is_ok() {
                 let (coal_proof, ore_proof) = tokio::join!(

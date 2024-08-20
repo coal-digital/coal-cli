@@ -31,6 +31,21 @@ use crate::{
 impl Miner {
     pub async fn mine(&self, args: MineArgs) {
         // Open account, if needed.
+        let merged = args.merged.clone();
+
+        match merged.as_str() {
+            "ore" => {
+                println!("{} {}", "INFO".bold().green(), "Started merged mining...");
+            }
+            "none" => {
+                println!("{} {}", "INFO".bold().green(), "Started coal mining...");
+            }
+            _ => {
+                println!("{} {} \"{}\" {}", "ERROR".bold().red(), "Argument value", merged, "not recognized");
+                return;
+            }
+        }
+
         let signer = self.signer();
         let result = self.open(args.merged).await;
         if result.is_err() {
@@ -53,10 +68,9 @@ impl Miner {
                 get_config(&self.rpc_client, true)
             );
             let coal_proof = get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_coal_hash_at, false).await;
-            let ore_proof = if args.merged { 
-                get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_ore_hash_at, true).await 
-            } else { 
-                coal_proof
+            let ore_proof = match merged.as_str() {
+                "ore" => get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_ore_hash_at, true).await,
+                _ => coal_proof,
             };
 
             println!(
@@ -73,20 +87,23 @@ impl Miner {
                 calculate_multiplier(coal_proof.balance, coal_config.top_balance)
             );
 
-            if args.merged {
-                println!(
-                    "\n\nStake: {} ORE\n{}  Multiplier: {:12}x",
-                    amount_u64_to_string(coal_proof.balance),
-                    if last_ore_hash_at.gt(&0) {
-                        format!(
-                            "  Change: {} ORE\n",
-                            amount_u64_to_string(coal_proof.balance.saturating_sub(last_ore_balance))
-                        )
-                    } else {
-                        "".to_string()
-                    },
-                    calculate_multiplier(ore_proof.balance, ore_config.top_balance)
-                );
+            match merged.as_str() {
+                "ore" => {
+                    println!(
+                        "Stake: {} ORE\n{}  Multiplier: {:12}x",
+                        amount_u64_to_string(ore_proof.balance),
+                        if last_ore_hash_at.gt(&0) {
+                            format!(
+                                "  Change: {} ORE\n",
+                                amount_u64_to_string(ore_proof.balance.saturating_sub(last_ore_balance))
+                            )
+                        } else {
+                            "".to_string()
+                        },
+                        calculate_multiplier(ore_proof.balance, ore_config.top_balance)
+                    );
+                }
+                _ => {}
             }
             
 
@@ -99,10 +116,9 @@ impl Miner {
             let cutoff_time = self.get_cutoff(coal_proof, args.buffer_time).await;
 
             // Run drillx
-            let min_difficulty = if args.merged { 
-                coal_config.min_difficulty.min(ore_config.min_difficulty) 
-            } else { 
-                coal_config.min_difficulty 
+            let min_difficulty = match merged.as_str() { 
+                "ore" => coal_config.min_difficulty.min(ore_config.min_difficulty),
+                _ => coal_config.min_difficulty,
             };
             let solution = Self::find_hash_par(coal_proof, cutoff_time, args.cores, min_difficulty as u32)
                 .await;
@@ -115,17 +131,22 @@ impl Miner {
                 coal_api::instruction::auth(proof_pubkey(signer.pubkey())),
             ];
 
-            if args.merged {
-                compute_budget += 500_000;
-                ixs.push(ore_api::instruction::mine(
-                    signer.pubkey(),
-                    signer.pubkey(),
-                    self.find_bus(true).await,
-                    solution,
-                ));
+            match merged.as_str() {
+                "ore" => {
+                    compute_budget += 500_000;
+                    ixs.push(ore_api::instruction::mine(
+                        signer.pubkey(),
+                        signer.pubkey(),
+                        self.find_bus(true).await,
+                        solution,
+                    ));
+                }
+                _ => {}
             }
 
-            if self.should_reset(coal_config).await && rand::thread_rng().gen_range(0..5).eq(&0) {
+            // Reset if needed
+            let coal_config = get_config(&self.rpc_client, false).await;
+            if self.should_reset(coal_config).await {
                 compute_budget += 100_000;
                 ixs.push(coal_api::instruction::reset(signer.pubkey()));
             }

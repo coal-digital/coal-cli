@@ -75,9 +75,9 @@ pub struct MineArgs {
         short,
         value_name = "MERGED",
         help = "Whether to also mine ORE.",
-        default_value = "false"
+        default_value = "none"
     )]
-    pub merged: bool,
+    pub merged: String,
 }
 
 #[derive(Parser, Debug)]

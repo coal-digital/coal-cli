@@ -1,6 +1,6 @@
 use std::{sync::Arc, time::Instant};
 
-use drillx::equix;
+use drillx_2::equix;
 use solana_rpc_client::spinner;
 
 use crate::{args::BenchmarkArgs, Miner};
@@ -41,7 +41,7 @@ impl Miner {
                             let _ = core_affinity::set_for_current(i);
 
                             // Create hash
-                            let _hx = drillx::hash_with_memory(
+                            let _hx = drillx_2::hash_with_memory(
                                 &mut memory,
                                 &challenge,
                                 &nonce.to_le_bytes(),

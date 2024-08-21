@@ -1,6 +1,6 @@
 use std::{sync::Arc, sync::RwLock, time::Instant};
 use colored::*;
-use drillx::{
+use drillx_2::{
     equix::{self},
     Hash, Solution,
 };
@@ -115,9 +115,9 @@ impl Miner {
             // Calculate cutoff time
             let cutoff_time = self.get_cutoff(coal_proof, args.buffer_time).await;
 
-            // Run drillx
+            // Run drillx_2
             let min_difficulty = match merged.as_str() { 
-                "ore" => coal_config.min_difficulty.min(ore_config.min_difficulty),
+                "ore" => coal_config.min_difficulty.max(ore_config.min_difficulty),
                 _ => coal_config.min_difficulty,
             };
             let solution = Self::find_hash_par(coal_proof, cutoff_time, args.cores, min_difficulty as u32)
@@ -134,7 +134,7 @@ impl Miner {
             match merged.as_str() {
                 "ore" => {
                     compute_budget += 500_000;
-                    ixs.push(ore_api::instruction::mine(
+                    ixs.push(coal_api::instruction::mine_ore(
                         signer.pubkey(),
                         signer.pubkey(),
                         self.find_bus(true).await,
@@ -200,7 +200,7 @@ impl Miner {
                         let mut best_hash = Hash::default();
                         loop {
                             // Create hash
-                            if let Ok(hx) = drillx::hash_with_memory(
+                            if let Ok(hx) = drillx_2::hash_with_memory(
                                 &mut memory,
                                 &coal_proof.challenge,
                                 &nonce.to_le_bytes(),

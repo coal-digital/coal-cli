@@ -10,7 +10,7 @@ use crate::{
     args::ClaimArgs,
     cu_limits::CU_LIMIT_CLAIM,
     send_and_confirm::ComputeBudget,
-    utils::{amount_f64_to_u64, ask_confirm, get_proof_with_authority},
+    utils::{Resource, amount_f64_to_u64, ask_confirm, get_proof_with_authority},
     Miner,
 };
 
@@ -18,7 +18,7 @@ impl Miner {
     pub async fn claim(&self, args: ClaimArgs) {
         let signer = self.signer();
         let pubkey = signer.pubkey();
-        let proof = get_proof_with_authority(&self.rpc_client, pubkey, false).await;
+        let proof = get_proof_with_authority(&self.rpc_client, pubkey, Resource::Coal).await;
         let mut ixs = vec![];
         let beneficiary = match args.to {
             None => self.initialize_ata(pubkey).await,

@@ -947,8 +947,6 @@ checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
 [[package]]
 name = "coal-api"
 version = "2.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f8ea40c3c4609c7e86416222e329e2044f236aa8e6a0f0d957d4c2c8a8a4aa9c"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -988,6 +986,8 @@ dependencies = [
  "reqwest 0.12.4",
  "serde",
  "serde_json",
+ "smelter-api",
+ "smelter-utils",
  "solana-cli-config",
  "solana-client",
  "solana-program",
@@ -1004,8 +1004,6 @@ dependencies = [
 [[package]]
 name = "coal-utils"
 version = "2.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb26b94f251538acc2605e4656652c37a86cf23490bad4b68c1c46308eb81f28"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -2834,9 +2832,7 @@ dependencies = [
 
 [[package]]
 name = "ore-api"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0697cf6480f6c81117db19ceeaa66206b76f1d5b0e2896767f6d797f50181475"
+version = "2.1.4"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -2854,9 +2850,7 @@ dependencies = [
 
 [[package]]
 name = "ore-utils"
-version = "2.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90a09a7a1e296ce157c75cf41145edb3608b838f9503125897552f4fe49acf64"
+version = "2.1.4"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -3863,6 +3857,34 @@ name = "smallvec"
 version = "1.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
+
+[[package]]
+name = "smelter-api"
+version = "1.0.0"
+dependencies = [
+ "array-const-fn-init",
+ "bytemuck",
+ "const-crypto",
+ "drillx_2",
+ "mpl-token-metadata",
+ "num_enum 0.7.2",
+ "smelter-utils",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "static_assertions",
+ "thiserror",
+]
+
+[[package]]
+name = "smelter-utils"
+version = "1.0.0"
+dependencies = [
+ "bytemuck",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+]
 
 [[package]]
 name = "socket2"

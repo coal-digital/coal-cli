@@ -1,11 +1,11 @@
 use crate::{
-    utils::{amount_u64_to_string, get_config},
+    utils::{Resource, amount_u64_to_string, get_config},
     Miner,
 };
 
 impl Miner {
     pub async fn rewards(&self) {
-        let config = get_config(&self.rpc_client, false).await;
+        let config = get_config(&self.rpc_client, Resource::Coal).await;
         let base_reward_rate = config.base_reward_rate;
 
         let mut s = format!(

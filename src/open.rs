@@ -3,7 +3,7 @@ use solana_sdk::{instruction::Instruction, signature::Signer};
 
 use crate::{
     send_and_confirm::ComputeBudget,
-    utils::{get_proof, ore_proof_pubkey, proof_pubkey},
+    utils::{Resource, get_proof, proof_pubkey},
     Miner
 };
 
@@ -16,8 +16,8 @@ impl Miner {
         let mut compute_budget = 200_000;
         let mut ix: Vec<Instruction> = vec![];
 
-        let coal_proof_address = proof_pubkey(signer.pubkey());
-        let ore_proof_address = ore_proof_pubkey(signer.pubkey());
+        let coal_proof_address = proof_pubkey(signer.pubkey(), Resource::Coal);
+        let ore_proof_address = proof_pubkey(signer.pubkey(), Resource::Ore);
 
         let (coal_proof_result, ore_proof_result) = tokio::join!(
             self.rpc_client.get_account(&coal_proof_address),
@@ -62,5 +62,22 @@ impl Miner {
 
     
         Ok(true)
+    }
+
+    pub async fn open_smelter(&self) {
+        // Return early if miner is already registered
+        let signer = self.signer();
+        let fee_payer = self.fee_payer();
+        let proof_address = proof_pubkey(signer.pubkey(), Resource::Ingots);
+        if self.rpc_client.get_account(&proof_address).await.is_ok() {
+            return;
+        }
+
+        // Sign and send transaction.
+        println!("Generating challenge...");
+        let ix = smelter_api::instruction::open(signer.pubkey(), signer.pubkey(), fee_payer.pubkey());
+        self.send_and_confirm(&[ix], ComputeBudget::Fixed(400_000), false)
+            .await
+            .ok();
     }
 }

@@ -7,7 +7,7 @@ use spl_token::amount_to_ui_amount;
 
 use crate::{
     args::ProofArgs,
-    utils::{get_proof, proof_pubkey},
+    utils::{Resource, get_proof, proof_pubkey},
     Miner,
 };
 
@@ -17,7 +17,7 @@ impl Miner {
         let address = if let Some(address) = args.address {
             Pubkey::from_str(&address).unwrap()
         } else {
-            proof_pubkey(signer.pubkey())
+            proof_pubkey(signer.pubkey(), Resource::Coal)
         };
         let proof = get_proof(&self.rpc_client, address).await;
         println!("Address: {:?}", address);

@@ -19,11 +19,11 @@ use crate::{
     args::MineArgs,
     send_and_confirm::ComputeBudget,
     utils::{
+        Resource,
         amount_u64_to_string,
         get_clock, get_config,
         get_updated_proof_with_authority, 
-        ore_proof_pubkey,
-        proof_pubkey
+        proof_pubkey,
     },
     Miner,
 };
@@ -64,12 +64,12 @@ impl Miner {
         loop {
             // Fetch coal_proof
             let (coal_config, ore_config) = tokio::join!(
-                get_config(&self.rpc_client, false),
-                get_config(&self.rpc_client, true)
+                get_config(&self.rpc_client, Resource::Coal),
+                get_config(&self.rpc_client, Resource::Ore)
             );
-            let coal_proof = get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_coal_hash_at, false).await;
+            let coal_proof = get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_coal_hash_at, Resource::Coal).await;
             let ore_proof = match merged.as_str() {
-                "ore" => get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_ore_hash_at, true).await,
+                "ore" => get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_ore_hash_at, Resource::Ore).await,
                 _ => coal_proof,
             };
 
@@ -127,8 +127,8 @@ impl Miner {
             let mut compute_budget = 500_000;
             // Build instruction set
             let mut ixs = vec![
-                ore_api::instruction::auth(ore_proof_pubkey(signer.pubkey())),
-                coal_api::instruction::auth(proof_pubkey(signer.pubkey())),
+                ore_api::instruction::auth(proof_pubkey(signer.pubkey(), Resource::Ore)),
+                coal_api::instruction::auth(proof_pubkey(signer.pubkey(), Resource::Coal)),
             ];
 
             match merged.as_str() {
@@ -145,7 +145,7 @@ impl Miner {
             }
 
             // Reset if needed
-            let coal_config = get_config(&self.rpc_client, false).await;
+            let coal_config = get_config(&self.rpc_client, Resource::Coal).await;
             if self.should_reset(coal_config).await {
                 compute_budget += 100_000;
                 ixs.push(coal_api::instruction::reset(signer.pubkey()));
@@ -164,7 +164,7 @@ impl Miner {
         }
     }
 
-    async fn find_hash_par(
+    pub async fn find_hash_par(
         coal_proof: Proof,
         cutoff_time: u64,
         cores: u64,
@@ -289,7 +289,7 @@ impl Miner {
         }
     }
 
-    async fn should_reset(&self, config: Config) -> bool {
+    pub async fn should_reset(&self, config: Config) -> bool {
         let clock = get_clock(&self.rpc_client).await;
         config
             .last_reset_at
@@ -298,7 +298,7 @@ impl Miner {
             .le(&clock.unix_timestamp)
     }
 
-    async fn get_cutoff(&self, coal_proof: Proof, buffer_time: u64) -> u64 {
+    pub async fn get_cutoff(&self, coal_proof: Proof, buffer_time: u64) -> u64 {
         let clock = get_clock(&self.rpc_client).await;
         coal_proof
             .last_hash_at
@@ -308,7 +308,7 @@ impl Miner {
             .max(0) as u64
     }
 
-    async fn find_bus(&self, ore: bool) -> Pubkey {
+    pub async fn find_bus(&self, ore: bool) -> Pubkey {
         // Fetch the bus with the largest balance
         let bus_addresses = if ore { ORE_BUS_ADDRESSES } else { BUS_ADDRESSES };
         if let Ok(accounts) = self.rpc_client.get_multiple_accounts(&bus_addresses).await {

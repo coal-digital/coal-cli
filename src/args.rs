@@ -89,6 +89,28 @@ pub struct ProofArgs {
 #[derive(Parser, Debug)]
 pub struct RewardsArgs {}
 
+
+#[derive(Parser, Debug)]
+pub struct SmeltArgs {
+    #[arg(
+        long,
+        short,
+        value_name = "CORES_COUNT",
+        help = "The number of CPU cores to allocate to mining.",
+        default_value = "1"
+    )]
+    pub cores: u64,
+
+    #[arg(
+        long,
+        short,
+        value_name = "SECONDS",
+        help = "The number seconds before the deadline to stop mining and start submitting.",
+        default_value = "5"
+    )]
+    pub buffer_time: u64,
+}
+
 #[derive(Parser, Debug)]
 pub struct StakeArgs {
     #[arg(

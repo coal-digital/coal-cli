@@ -5,6 +5,8 @@ use coal_api::{
     consts::*,
     state::{Config, Proof, Treasury},
 };
+use smelter_api::state::Config as SmelterConfig;
+use smelter_utils::AccountDeserialize as SmelterAccountDeserialize;
 use coal_utils::AccountDeserialize;
 use serde::Deserialize;
 
@@ -18,6 +20,13 @@ use tokio::time::sleep;
 pub const BLOCKHASH_QUERY_RETRIES: usize = 5;
 pub const BLOCKHASH_QUERY_DELAY: u64 = 500;
 
+#[derive(Clone, Hash, Eq, PartialEq)]
+pub enum Resource {
+    Coal,
+    Ore,
+    Ingots,
+}
+
 pub async fn _get_treasury(client: &RpcClient) -> Treasury {
     let data = client
         .get_account_data(&TREASURY_ADDRESS)
@@ -26,16 +35,22 @@ pub async fn _get_treasury(client: &RpcClient) -> Treasury {
     *Treasury::try_from_bytes(&data).expect("Failed to parse treasury account")
 }
 
-pub async fn get_config(client: &RpcClient, ore: bool) -> Config {
+pub async fn get_config(client: &RpcClient, resource: Resource) -> Config {
+    let config_address = match resource {
+        Resource::Coal => &coal_api::consts::CONFIG_ADDRESS,
+        Resource::Ore => &ore_api::consts::CONFIG_ADDRESS,
+        Resource::Ingots => &smelter_api::consts::CONFIG_ADDRESS,
+    };
     let data = client
-        .get_account_data(&if ore { ORE_CONFIG_ADDRESS } else { CONFIG_ADDRESS })
+        .get_account_data( config_address)
         .await
         .expect("Failed to get config account");
+
     *Config::try_from_bytes(&data).expect("Failed to parse config account")
 }
 
-pub async fn get_proof_with_authority(client: &RpcClient, authority: Pubkey, ore: bool) -> Proof {
-    let proof_address = if ore { ore_proof_pubkey(authority) } else { proof_pubkey(authority) };
+pub async fn get_proof_with_authority(client: &RpcClient, authority: Pubkey, resource: Resource) -> Proof {
+    let proof_address = proof_pubkey(authority, resource);
     get_proof(client, proof_address).await
 }
 
@@ -43,10 +58,10 @@ pub async fn get_updated_proof_with_authority(
     client: &RpcClient,
     authority: Pubkey,
     lash_hash_at: i64,
-    ore: bool,
+    resource: Resource,
 ) -> Proof {
     loop {
-        let proof = get_proof_with_authority(client, authority, ore).await;
+        let proof = get_proof_with_authority(client, authority, resource.clone()).await;
         if proof.last_hash_at.gt(&lash_hash_at) {
             return proof;
         }
@@ -123,13 +138,13 @@ pub async fn get_latest_blockhash_with_retries(
 }
 
 #[cached]
-pub fn proof_pubkey(authority: Pubkey) -> Pubkey {
-    Pubkey::find_program_address(&[PROOF, authority.as_ref()], &coal_api::ID).0
-}
-
-#[cached]
-pub fn ore_proof_pubkey(authority: Pubkey) -> Pubkey {
-    Pubkey::find_program_address(&[PROOF, authority.as_ref()], &ORE_PROGRAM_ID).0
+pub fn proof_pubkey(authority: Pubkey, resource: Resource) -> Pubkey {
+    let program_id = match resource {
+        Resource::Coal => &coal_api::ID,
+        Resource::Ore => &ore_api::ID,
+        Resource::Ingots => &smelter_api::ID,
+    };
+    Pubkey::find_program_address(&[PROOF, authority.as_ref()], program_id).0
 }
 
 #[cached]

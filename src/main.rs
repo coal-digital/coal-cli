@@ -17,6 +17,7 @@ mod send_and_confirm;
 mod stake;
 mod transfer;
 mod utils;
+mod smelt;
 
 use std::{sync::Arc, sync::RwLock};
 use futures::StreamExt;
@@ -72,6 +73,9 @@ enum Commands {
     #[command(about = "Fetch the current reward rate for each difficulty level")]
     Rewards(RewardsArgs),
 
+    #[command(about = "Start smelting INGOTs")]
+    Smelt(SmeltArgs),
+
     #[command(about = "Stake to earn a rewards multiplier")]
     Stake(StakeArgs),
 
@@ -81,6 +85,10 @@ enum Commands {
     #[cfg(feature = "admin")]
     #[command(about = "Initialize the program")]
     Initialize(InitializeArgs),
+
+    #[cfg(feature = "admin")]
+    #[command(about = "Initialize the smelter program")]
+    InitializeSmelter(InitializeArgs),
 }
 
 #[derive(Parser, Debug)]
@@ -238,6 +246,9 @@ async fn main() {
         Commands::Rewards(_) => {
             miner.rewards().await;
         }
+        Commands::Smelt(args) => {
+            miner.smelt(args).await;
+        }
         Commands::Stake(args) => {
             miner.stake(args).await;
         }
@@ -247,6 +258,10 @@ async fn main() {
         #[cfg(feature = "admin")]
         Commands::Initialize(_) => {
             miner.initialize().await;
+        }
+        #[cfg(feature = "admin")]
+        Commands::InitializeSmelter(_) => {
+            miner.initialize_smelter().await;
         }
     }
 }

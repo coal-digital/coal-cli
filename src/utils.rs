@@ -137,6 +137,14 @@ pub async fn get_latest_blockhash_with_retries(
     }
 }
 
+pub fn get_resource_name(resource: Resource) -> String {
+    match resource {
+        Resource::Coal => "COAL".to_string(),
+        Resource::Ingots => "INGOTS".to_string(),
+        Resource::Ore => "ORE".to_string(),
+    }
+}
+
 #[cached]
 pub fn proof_pubkey(authority: Pubkey, resource: Resource) -> Pubkey {
     let program_id = match resource {
@@ -162,3 +170,4 @@ pub struct Tip {
     pub landed_tips_99th_percentile: f64,
     pub ema_landed_tips_50th_percentile: f64,
 }
+

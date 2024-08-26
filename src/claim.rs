@@ -10,7 +10,7 @@ use crate::{
     args::ClaimArgs,
     cu_limits::CU_LIMIT_CLAIM,
     send_and_confirm::ComputeBudget,
-    utils::{Resource, amount_f64_to_u64, ask_confirm, get_proof_with_authority},
+    utils::{Resource, amount_f64_to_u64, ask_confirm, get_proof_with_authority, get_resource_name},
     Miner,
 };
 
@@ -135,13 +135,5 @@ impl Miner {
 
         // Return token account address
         token_account_pubkey
-    }
-}
-
-pub fn get_resource_name(resource: Resource) -> String {
-    match resource {
-        Resource::Coal => "COAL".to_string(),
-        Resource::Ingots => "INGOTS".to_string(),
-        Resource::Ore => "ORE".to_string(),
     }
 }

@@ -38,6 +38,13 @@ pub struct ClaimArgs {
         help = "Wallet address to receive claimed tokens."
     )]
     pub to: Option<String>,
+
+    #[arg(
+        long,
+        value_name = "RESOURCE",
+        help = "The token to claim."
+    )]
+    pub resource: Option<String>,
 }
 
 #[derive(Parser, Debug)]

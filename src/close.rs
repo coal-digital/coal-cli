@@ -31,6 +31,7 @@ impl Miner {
             self.claim(ClaimArgs {
                 amount: None,
                 to: None,
+                resource: None,
             })
             .await;
         }

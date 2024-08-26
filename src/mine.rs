@@ -5,15 +5,17 @@ use drillx_2::{
     Hash, Solution,
 };
 use coal_api::{
-    consts::{BUS_ADDRESSES, BUS_COUNT, EPOCH_DURATION, ORE_BUS_ADDRESSES},
+    consts::{BUS_ADDRESSES, BUS_COUNT, EPOCH_DURATION},
     state::{Bus, Config, Proof},
 };
+use ore_api::consts::BUS_ADDRESSES as ORE_BUS_ADDRESSES;
+use smelter_api::consts::BUS_ADDRESSES as SMELTER_BUS_ADDRESSES;
 use coal_utils::AccountDeserialize;
 use rand::Rng;
 use solana_program::pubkey::Pubkey;
 use solana_rpc_client::spinner;
 use solana_sdk::signer::Signer;
-use tokio; // Added for parallel execution
+use tokio;
 
 use crate::{
     args::MineArgs,
@@ -137,7 +139,7 @@ impl Miner {
                     ixs.push(coal_api::instruction::mine_ore(
                         signer.pubkey(),
                         signer.pubkey(),
-                        self.find_bus(true).await,
+                        self.find_bus(Resource::Ore).await,
                         solution,
                     ));
                 }
@@ -155,7 +157,7 @@ impl Miner {
             ixs.push(coal_api::instruction::mine(
                 signer.pubkey(),
                 signer.pubkey(),
-                self.find_bus(false).await,
+                self.find_bus(Resource::Coal).await,
                 solution,
             ));
 
@@ -308,9 +310,13 @@ impl Miner {
             .max(0) as u64
     }
 
-    pub async fn find_bus(&self, ore: bool) -> Pubkey {
+    pub async fn find_bus(&self, resource: Resource) -> Pubkey {
         // Fetch the bus with the largest balance
-        let bus_addresses = if ore { ORE_BUS_ADDRESSES } else { BUS_ADDRESSES };
+        let bus_addresses = match resource {
+            Resource::Coal => BUS_ADDRESSES,
+            Resource::Ore => ORE_BUS_ADDRESSES,
+            Resource::Ingots => SMELTER_BUS_ADDRESSES,
+        };
         if let Ok(accounts) = self.rpc_client.get_multiple_accounts(&bus_addresses).await {
             let mut top_bus_balance: u64 = 0;
             let mut top_bus = bus_addresses[0];

@@ -34,7 +34,7 @@ impl Miner {
                 amount_u64_to_string(proof.balance),
                 if last_hash_at.gt(&0) {
                     format!(
-                        "  Change: {} COAL\n",
+                        "  Change: {} INGOT\n",
                         amount_u64_to_string(proof.balance.saturating_sub(last_balance))
                     )
                 } else {
@@ -56,21 +56,22 @@ impl Miner {
             let mut compute_budget = 500_000;
             // Build instruction set
             let mut ixs = vec![
-                ore_api::instruction::auth(proof_pubkey(signer.pubkey(), Resource::Ingots)),
+                smelter_api::instruction::auth(proof_pubkey(signer.pubkey(), Resource::Ingots)),
             ];
 
             // Reset if needed
             let config = get_config(&self.rpc_client, Resource::Ingots).await;
+            println!("Config: {:?}", config);
             if self.should_reset(config).await {
                 compute_budget += 100_000;
-                ixs.push(coal_api::instruction::reset(signer.pubkey()));
+                ixs.push(smelter_api::instruction::reset(signer.pubkey()));
             }
 
             // Build mine ix
             ixs.push(smelter_api::instruction::smelt(
                 signer.pubkey(),
                 signer.pubkey(),
-                self.find_bus(false).await,
+                self.find_bus(Resource::Ingots).await,
                 solution,
             ));
 

@@ -231,8 +231,8 @@ async fn main() {
         Commands::Claim(args) => {
             miner.claim(args).await;
         }
-        Commands::Close(_) => {
-            miner.close().await;
+        Commands::Close(args) => {
+            miner.close(args).await;
         }
         Commands::Config(_) => {
             miner.config().await;

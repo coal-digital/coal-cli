@@ -48,7 +48,14 @@ pub struct ClaimArgs {
 }
 
 #[derive(Parser, Debug)]
-pub struct CloseArgs {}
+pub struct CloseArgs {
+    #[arg(
+        long,
+        value_name = "RESOURCE",
+        help = "The token to claim."
+    )]
+    pub resource: Option<String>,
+}
 
 #[derive(Parser, Debug)]
 pub struct ConfigArgs {}

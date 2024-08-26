@@ -137,6 +137,21 @@ pub async fn get_latest_blockhash_with_retries(
     }
 }
 
+pub fn get_resource_from_str(resource: &Option<String>) -> Resource {
+    match resource {
+        Some(resource) => match resource.as_str() {
+            "ore" => Resource::Ore,
+            "ingot" => Resource::Ingots,
+            "coal" => Resource::Coal,
+            _ => {
+                println!("Error: Invalid resource type specified.");
+                std::process::exit(1);
+            },
+        }
+        None => Resource::Coal,
+    }
+}
+
 pub fn get_resource_name(resource: Resource) -> String {
     match resource {
         Resource::Coal => "COAL".to_string(),

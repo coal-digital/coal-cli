@@ -3,23 +3,26 @@ use solana_sdk::signature::Signer;
 use spl_token::amount_to_ui_amount;
 
 use crate::{
-    args::ClaimArgs,
-    send_and_confirm::ComputeBudget,
-    utils::{Resource, ask_confirm, get_proof_with_authority},
-    Miner,
+    args::ClaimArgs, 
+    send_and_confirm::ComputeBudget, 
+    utils::{ask_confirm, get_proof_with_authority, get_resource_name, get_resource_from_str, Resource}, 
+    CloseArgs,
+    Miner
 };
 
 impl Miner {
-    pub async fn close(&self) {
+    pub async fn close(&self, args: CloseArgs) {
         // Confirm proof exists
         let signer = self.signer();
         let proof = get_proof_with_authority(&self.rpc_client, signer.pubkey(), Resource::Coal).await;
+        let resource = get_resource_from_str(&args.resource);
 
         // Confirm the user wants to close.
         if !ask_confirm(
-            format!("{} You have {} COAL staked in this account.\nAre you sure you want to {}close this account? [Y/n]", 
+            format!("{} You have {} {} staked in this account.\nAre you sure you want to {}close this account? [Y/n]", 
                 "WARNING".yellow(),
                 amount_to_ui_amount(proof.balance, coal_api::consts::TOKEN_DECIMALS),
+                get_resource_name(resource),
                 if proof.balance.gt(&0) { "claim your stake and "} else { "" }
             ).as_str()
         ) {
@@ -31,7 +34,7 @@ impl Miner {
             self.claim(ClaimArgs {
                 amount: None,
                 to: None,
-                resource: None,
+                resource: args.resource,
             })
             .await;
         }

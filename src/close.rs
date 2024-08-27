@@ -22,7 +22,7 @@ impl Miner {
             format!("{} You have {} {} staked in this account.\nAre you sure you want to {}close this account? [Y/n]", 
                 "WARNING".yellow(),
                 amount_to_ui_amount(proof.balance, coal_api::consts::TOKEN_DECIMALS),
-                get_resource_name(resource),
+                get_resource_name(&resource),
                 if proof.balance.gt(&0) { "claim your stake and "} else { "" }
             ).as_str()
         ) {

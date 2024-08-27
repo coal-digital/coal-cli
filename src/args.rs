@@ -1,5 +1,6 @@
 use clap::{arg, Parser};
 
+
 #[derive(Parser, Debug)]
 pub struct BalanceArgs {
     #[arg(
@@ -7,6 +8,12 @@ pub struct BalanceArgs {
         help = "The account address to fetch the balance of."
     )]
     pub address: Option<String>,
+    #[arg(
+        long,
+        value_name = "RESOURCE",
+        help = "The token to claim."
+    )]
+    pub resource: Option<String>,
 }
 
 #[derive(Parser, Debug)]
@@ -151,6 +158,13 @@ pub struct TransferArgs {
         help = "The account address of the receipient."
     )]
     pub to: String,
+
+    #[arg(
+        long,
+        value_name = "RESOURCE",
+        help = "The token to transfer."
+    )]
+    pub resource: Option<String>,
 }
 
 #[derive(Parser, Debug)]

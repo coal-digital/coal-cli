@@ -1,7 +1,6 @@
 use std::str::FromStr;
 
 use colored::*;
-use coal_api::consts::MINT_ADDRESS;
 use solana_program::pubkey::Pubkey;
 use solana_sdk::signature::Signer;
 use spl_token::amount_to_ui_amount;
@@ -10,7 +9,7 @@ use crate::{
     args::TransferArgs,
     cu_limits::CU_LIMIT_CLAIM,
     send_and_confirm::ComputeBudget,
-    utils::{amount_f64_to_u64, ask_confirm},
+    utils::{amount_f64_to_u64, ask_confirm, get_resource_from_str, get_resource_mint},
     Miner,
 };
 
@@ -18,14 +17,16 @@ impl Miner {
     pub async fn transfer(&self, args: TransferArgs) {
         let signer = self.signer();
         let pubkey = signer.pubkey();
+        let resource = get_resource_from_str(&args.resource);
+        let mint = get_resource_mint(&resource);
         let sender_tokens =
-            spl_associated_token_account::get_associated_token_address(&pubkey, &MINT_ADDRESS);
+            spl_associated_token_account::get_associated_token_address(&pubkey, &mint);
         let mut ixs = vec![];
 
         // Initialize recipient, if needed
         let to = Pubkey::from_str(&args.to).expect("Failed to parse recipient wallet address");
         let recipient_tokens =
-            spl_associated_token_account::get_associated_token_address(&to, &MINT_ADDRESS);
+            spl_associated_token_account::get_associated_token_address(&to, &mint);
         if self
             .rpc_client
             .get_token_account(&recipient_tokens)
@@ -36,7 +37,7 @@ impl Miner {
                 spl_associated_token_account::instruction::create_associated_token_account(
                     &signer.pubkey(),
                     &to,
-                    &coal_api::consts::MINT_ADDRESS,
+                    &mint,
                     &spl_token::id(),
                 ),
             );

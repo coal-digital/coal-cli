@@ -122,7 +122,7 @@ impl Miner {
                 "ore" => coal_config.min_difficulty.max(ore_config.min_difficulty),
                 _ => coal_config.min_difficulty,
             };
-            let solution = Self::find_hash_par(coal_proof, cutoff_time, args.cores, min_difficulty as u32)
+            let solution = Self::find_hash_par(coal_proof, cutoff_time, args.cores, min_difficulty as u32, Resource::Coal)
                 .await;
 
 
@@ -171,6 +171,7 @@ impl Miner {
         cutoff_time: u64,
         cores: u64,
         min_difficulty: u32,
+        resource: Resource,
     ) -> Solution {
         // Dispatch job to each thread
         let progress_bar = Arc::new(spinner::new_progress_bar());
@@ -185,6 +186,7 @@ impl Miner {
                     let coal_proof = coal_proof.clone();
                     let progress_bar = progress_bar.clone();
                     let mut memory = equix::SolverMemory::new();
+                    let resource = resource.clone(); // Clone resource here
                     move || {
                         // Return if core should not be used
                         if (i.id as u64).ge(&cores) {
@@ -225,7 +227,8 @@ impl Miner {
                                 if timer.elapsed().as_secs().ge(&cutoff_time) {
                                     if i.id == 0 {
                                         progress_bar.set_message(format!(
-                                            "Mining... (difficulty {})",
+                                            "{}... (difficulty {})",
+                                            get_action_name(&resource),
                                             global_best_difficulty,
                                         ));
                                     }
@@ -235,7 +238,8 @@ impl Miner {
                                     }
                                 } else if i.id == 0 {
                                     progress_bar.set_message(format!(
-                                        "Mining... (difficulty {}, time {})",
+                                        "{}... (difficulty {}, time {})",
+                                        get_action_name(&resource),
                                         global_best_difficulty,
                                         format_duration(
                                             cutoff_time.saturating_sub(timer.elapsed().as_secs())
@@ -347,4 +351,12 @@ fn format_duration(seconds: u32) -> String {
     let minutes = seconds / 60;
     let remaining_seconds = seconds % 60;
     format!("{:02}:{:02}", minutes, remaining_seconds)
+}
+
+fn get_action_name(resource: &Resource) -> String {
+    match resource {
+        Resource::Coal => "Mining".to_string(),
+        Resource::Ore => "Mining".to_string(),
+        Resource::Ingots => "Smelting".to_string(),
+    }
 }

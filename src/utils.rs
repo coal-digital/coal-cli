@@ -5,8 +5,6 @@ use coal_api::{
     consts::*,
     state::{Config, Proof, Treasury},
 };
-use smelter_api::state::Config as SmelterConfig;
-use smelter_utils::AccountDeserialize as SmelterAccountDeserialize;
 use coal_utils::AccountDeserialize;
 use serde::Deserialize;
 
@@ -152,11 +150,19 @@ pub fn get_resource_from_str(resource: &Option<String>) -> Resource {
     }
 }
 
-pub fn get_resource_name(resource: Resource) -> String {
+pub fn get_resource_name(resource: &Resource) -> String {
     match resource {
         Resource::Coal => "COAL".to_string(),
         Resource::Ingots => "INGOTS".to_string(),
         Resource::Ore => "ORE".to_string(),
+    }
+}
+
+pub fn get_resource_mint(resource: &Resource) -> Pubkey {
+    match resource {
+        Resource::Coal => coal_api::consts::MINT_ADDRESS,
+        Resource::Ingots => smelter_api::consts::MINT_ADDRESS,
+        Resource::Ore => ore_api::consts::MINT_ADDRESS,
     }
 }
 

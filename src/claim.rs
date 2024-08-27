@@ -64,7 +64,7 @@ impl Miner {
                 format!(
                     "{} {}",
                     amount_to_ui_amount(amount, coal_api::consts::TOKEN_DECIMALS),
-                    get_resource_name(resource.clone())
+                    get_resource_name(&resource)
                 )
                 .bold(),
             )

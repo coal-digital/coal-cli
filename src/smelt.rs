@@ -1,5 +1,6 @@
 use solana_sdk::signer::Signer;
 
+use smelter_api::consts::MAX_EFFICIENCY_BONUS_PERCENTAGE;
 use crate::{
     args::SmeltArgs,
     send_and_confirm::ComputeBudget,
@@ -24,33 +25,91 @@ impl Miner {
         // Start smelting loop
         let mut last_hash_at = 0;
         let mut last_balance = 0;
+        let mut last_coal_balance = 0;
+        let mut last_ore_balance = 0;
+
+        let coal_token_account_address = spl_associated_token_account::get_associated_token_address(
+            &signer.pubkey(),
+            &coal_api::consts::MINT_ADDRESS,
+        );
+        let ore_token_account_address = spl_associated_token_account::get_associated_token_address(
+            &signer.pubkey(),
+            &ore_api::consts::MINT_ADDRESS,
+        );
+
         loop {
             // Fetch proof
-            let config = get_config(&self.rpc_client, Resource::Ingots).await;
-            let proof = get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_hash_at, Resource::Ingots).await;
+            let (config, proof, coal_token_account, ore_token_account) = tokio::join!(
+                get_config(&self.rpc_client, Resource::Ingots),
+                get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_hash_at, Resource::Ingots),
+                self.rpc_client.get_token_account(&coal_token_account_address),
+                self.rpc_client.get_token_account(&ore_token_account_address),
+            );
 
+            let coal_token_account = match coal_token_account {
+                Ok(Some(coal_token_account)) => coal_token_account,
+                Err(e) => {
+                    println!("Error fetching coal token account: {:?}", e);
+                    return;
+                }
+                Ok(None) => {
+                    println!("No coal token account found");
+                    return;
+                }
+            };
+
+            let ore_token_account = match ore_token_account {
+                Ok(Some(ore_token_account)) => ore_token_account,
+                Err(e) => {
+                    println!("Error fetching coal token account: {:?}", e);
+                    return;
+                }
+                Ok(None) => {
+                    println!("No coal token account found");
+                    return;
+                }
+            };
+
+            let coal_balance = coal_token_account.token_amount.amount.parse::<u64>().unwrap_or(0);
+            let ore_balance = ore_token_account.token_amount.amount.parse::<u64>().unwrap_or(0);
+            
+            if last_coal_balance == 0 {
+                println!("Not enough coal to smelt, foreman");
+                return;
+            }
+
+            if last_ore_balance == 0 {
+                println!("Not enough ore to smelt, foreman");
+                return;
+            }
+            
             println!(
-                "\n\nStake: {} INGOT\n{}  Multiplier: {:12}x",
+                "\n\nStake: {} INGOT\n{}  Multiplier: {:12}x\n  Efficiency Bonus: {:12}%\n",
                 amount_u64_to_string(proof.balance),
                 if last_hash_at.gt(&0) {
                     format!(
-                        "  Change: {} INGOT\n",
-                        amount_u64_to_string(proof.balance.saturating_sub(last_balance))
+                        "  Change: {} INGOT\n  Coal Burn: {} INGOT\n  Ore Wrapped: {} INGOT\n",
+                        amount_u64_to_string(proof.balance.saturating_sub(last_balance)),
+                        amount_u64_to_string(coal_balance.saturating_sub(last_coal_balance)),
+                        amount_u64_to_string(ore_balance.saturating_sub(last_ore_balance))
                     )
                 } else {
                     "".to_string()
                 },
-                calculate_multiplier(proof.balance, config.top_balance)
+                calculate_multiplier(proof.balance, config.top_balance),
+                calculate_discount(proof.balance, config.top_balance)
             );
 
             last_hash_at = proof.last_hash_at;
             last_balance = proof.balance;
+            last_coal_balance = coal_balance;
+            last_ore_balance = ore_balance;
 
             // Calculate cutoff time
             let cutoff_time = self.get_cutoff(proof, args.buffer_time).await;
 
             // Run drillx_2
-            let solution = Self::find_hash_par(proof, cutoff_time, args.cores, config.min_difficulty as u32).await;
+            let solution = Self::find_hash_par(proof, cutoff_time, args.cores, config.min_difficulty as u32, Resource::Ingots).await;
 
 
             let mut compute_budget = 500_000;
@@ -83,4 +142,8 @@ impl Miner {
 
 fn calculate_multiplier(balance: u64, top_balance: u64) -> f64 {
     1.0 + (balance as f64 / top_balance as f64).min(1.0f64)
+}
+
+fn calculate_discount(balance: u64, top_balance: u64) -> f64 {
+    ((balance as f64 / top_balance as f64).min(1.0) * MAX_EFFICIENCY_BONUS_PERCENTAGE) * 100.0
 }

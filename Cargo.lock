@@ -947,6 +947,8 @@ checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
 [[package]]
 name = "coal-api"
 version = "2.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f8ea40c3c4609c7e86416222e329e2044f236aa8e6a0f0d957d4c2c8a8a4aa9c"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -964,7 +966,7 @@ dependencies = [
 
 [[package]]
 name = "coal-cli"
-version = "2.4.2"
+version = "2.5.0"
 dependencies = [
  "bincode",
  "bs58 0.5.1",
@@ -1004,6 +1006,8 @@ dependencies = [
 [[package]]
 name = "coal-utils"
 version = "2.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bb26b94f251538acc2605e4656652c37a86cf23490bad4b68c1c46308eb81f28"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -2832,7 +2836,9 @@ dependencies = [
 
 [[package]]
 name = "ore-api"
-version = "2.1.4"
+version = "2.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c67c8c00902d0cb31d7e1bdcc6caf81c80e4a1f11ca48054eb609e41b6065b4"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -2850,7 +2856,9 @@ dependencies = [
 
 [[package]]
 name = "ore-utils"
-version = "2.1.4"
+version = "2.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6c92cb0b8a4c9583113b78c87a5372d71825ec3432402cb843e1ffc6af9f6b7d"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -3861,6 +3869,8 @@ checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
 [[package]]
 name = "smelter-api"
 version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c1fc70bdec0ac926e5fbff7bcbf613a25b5253942aa86f2eeba7bf7d1d42fae5"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -3879,6 +3889,8 @@ dependencies = [
 [[package]]
 name = "smelter-utils"
 version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a17bb5c226064c4ad6ec7e009c9aecd10890147e0288aea12f3640ea2f378f3"
 dependencies = [
  "bytemuck",
  "solana-program",

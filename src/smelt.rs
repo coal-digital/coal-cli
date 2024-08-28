@@ -25,8 +25,8 @@ impl Miner {
         // Start smelting loop
         let mut last_hash_at = 0;
         let mut last_balance = 0;
-        let mut last_coal_balance = 0;
-        let mut last_ore_balance = 0;
+        let mut last_coal_balance: u64 = 0;
+        let mut last_ore_balance: u64 = 0;
 
         let coal_token_account_address = spl_associated_token_account::get_associated_token_address(
             &signer.pubkey(),
@@ -72,14 +72,14 @@ impl Miner {
 
             let coal_balance = coal_token_account.token_amount.amount.parse::<u64>().unwrap_or(0);
             let ore_balance = ore_token_account.token_amount.amount.parse::<u64>().unwrap_or(0);
-            
-            if last_coal_balance == 0 {
-                println!("Not enough coal to smelt, foreman");
+
+            if coal_balance == 0 {
+                println!("Not enough COAL to smelt, foreman");
                 return;
             }
 
-            if last_ore_balance == 0 {
-                println!("Not enough ore to smelt, foreman");
+            if ore_balance == 0 {
+                println!("Not enough ORE to smelt, foreman");
                 return;
             }
             
@@ -88,10 +88,10 @@ impl Miner {
                 amount_u64_to_string(proof.balance),
                 if last_hash_at.gt(&0) {
                     format!(
-                        "  Change: {} INGOT\n  Coal Burn: {} INGOT\n  Ore Wrapped: {} INGOT\n",
+                        "  Change: {} INGOT\n  Coal Burn: {} COAL\n  Ore Wrapped: {} ORE\n",
                         amount_u64_to_string(proof.balance.saturating_sub(last_balance)),
-                        amount_u64_to_string(coal_balance.saturating_sub(last_coal_balance)),
-                        amount_u64_to_string(ore_balance.saturating_sub(last_ore_balance))
+                        amount_u64_to_string(last_coal_balance.saturating_sub(coal_balance)),
+                        amount_u64_to_string(last_ore_balance.saturating_sub(ore_balance))
                     )
                 } else {
                     "".to_string()
@@ -120,7 +120,6 @@ impl Miner {
 
             // Reset if needed
             let config = get_config(&self.rpc_client, Resource::Ingots).await;
-            println!("Config: {:?}", config);
             if self.should_reset(config).await {
                 compute_budget += 100_000;
                 ixs.push(smelter_api::instruction::reset(signer.pubkey()));

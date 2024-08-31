@@ -23,7 +23,7 @@ impl Miner {
             self.rpc_client.get_account(&coal_proof_address),
             self.rpc_client.get_account(&ore_proof_address)
         );
-
+        println!("merged: {}", merged);
         if merged == "ore" {
             // For merged mining we need to ensure both are closed if the proofs are not already merged
             if ore_proof_result.is_ok() && coal_proof_result.is_ok() {
@@ -45,12 +45,12 @@ impl Miner {
 
             println!("Opening COAL account...");
             compute_budget += 200_000;
-            ix.push(coal_api::instruction::open(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()));
+            ix.push(coal_api::instruction::open_coal(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()));
             println!("Opening ORE account...");
             ix.push(ore_api::instruction::open(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()));
         } else if coal_proof_result.is_err() {
             println!("Opening COAL account...");
-            ix.push(coal_api::instruction::open(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()));
+            ix.push(coal_api::instruction::open_coal(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()));
         } else {
             return Ok(true);
         }

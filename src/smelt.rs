@@ -30,7 +30,7 @@ impl Miner {
 
         let coal_token_account_address = spl_associated_token_account::get_associated_token_address(
             &signer.pubkey(),
-            &coal_api::consts::MINT_ADDRESS,
+            &coal_api::consts::COAL_MINT_ADDRESS,
         );
         let ore_token_account_address = spl_associated_token_account::get_associated_token_address(
             &signer.pubkey(),

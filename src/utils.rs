@@ -35,10 +35,12 @@ pub async fn _get_treasury(client: &RpcClient) -> Treasury {
 
 pub async fn get_config(client: &RpcClient, resource: Resource) -> Config {
     let config_address = match resource {
-        Resource::Coal => &coal_api::consts::CONFIG_ADDRESS,
+        Resource::Coal => &coal_api::consts::COAL_CONFIG_ADDRESS,
         Resource::Ore => &ore_api::consts::CONFIG_ADDRESS,
         Resource::Ingots => &smelter_api::consts::CONFIG_ADDRESS,
     };
+    println!("Resource: {}", get_resource_name(&resource));
+    println!("Config address: {}", config_address);
     let data = client
         .get_account_data( config_address)
         .await
@@ -160,7 +162,7 @@ pub fn get_resource_name(resource: &Resource) -> String {
 
 pub fn get_resource_mint(resource: &Resource) -> Pubkey {
     match resource {
-        Resource::Coal => coal_api::consts::MINT_ADDRESS,
+        Resource::Coal => coal_api::consts::COAL_MINT_ADDRESS,
         Resource::Ingots => smelter_api::consts::MINT_ADDRESS,
         Resource::Ore => ore_api::consts::MINT_ADDRESS,
     }
@@ -173,12 +175,12 @@ pub fn proof_pubkey(authority: Pubkey, resource: Resource) -> Pubkey {
         Resource::Ore => &ore_api::ID,
         Resource::Ingots => &smelter_api::ID,
     };
-    Pubkey::find_program_address(&[PROOF, authority.as_ref()], program_id).0
+    Pubkey::find_program_address(&[COAL_PROOF, authority.as_ref()], program_id).0
 }
 
 #[cached]
 pub fn treasury_tokens_pubkey() -> Pubkey {
-    get_associated_token_address(&TREASURY_ADDRESS, &MINT_ADDRESS)
+    get_associated_token_address(&TREASURY_ADDRESS, &COAL_MINT_ADDRESS)
 }
 
 #[derive(Debug, Deserialize)]

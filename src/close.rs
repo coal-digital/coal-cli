@@ -40,7 +40,7 @@ impl Miner {
         }
 
         // Submit close transaction
-        let ix = coal_api::instruction::close(signer.pubkey());
+        let ix = coal_api::instruction::close_coal(signer.pubkey());
         self.send_and_confirm(&[ix], ComputeBudget::Fixed(500_000), false)
             .await
             .ok();

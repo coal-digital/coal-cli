@@ -5,7 +5,7 @@ use drillx_2::{
     Hash, Solution,
 };
 use coal_api::{
-    consts::{BUS_ADDRESSES, BUS_COUNT, EPOCH_DURATION},
+    consts::{COAL_BUS_ADDRESSES, BUS_COUNT, COAL_EPOCH_DURATION},
     state::{Bus, Config, Proof},
 };
 use ore_api::consts::BUS_ADDRESSES as ORE_BUS_ADDRESSES;
@@ -67,7 +67,7 @@ impl Miner {
             // Fetch coal_proof
             let (coal_config, ore_config) = tokio::join!(
                 get_config(&self.rpc_client, Resource::Coal),
-                get_config(&self.rpc_client, Resource::Ore)
+                get_config(&self.rpc_client, Resource::Coal) // TODO changed back
             );
             let coal_proof = get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_coal_hash_at, Resource::Coal).await;
             let ore_proof = match merged.as_str() {
@@ -136,7 +136,7 @@ impl Miner {
             match merged.as_str() {
                 "ore" => {
                     compute_budget += 500_000;
-                    ixs.push(coal_api::instruction::mine_ore(
+                    ixs.push(ore_api::instruction::mine(
                         signer.pubkey(),
                         signer.pubkey(),
                         self.find_bus(Resource::Ore).await,
@@ -150,7 +150,7 @@ impl Miner {
             let coal_config = get_config(&self.rpc_client, Resource::Coal).await;
             if self.should_reset(coal_config).await {
                 compute_budget += 100_000;
-                ixs.push(coal_api::instruction::reset(signer.pubkey()));
+                ixs.push(coal_api::instruction::reset_coal(signer.pubkey()));
             }
 
             // Build mine ix
@@ -299,7 +299,7 @@ impl Miner {
         let clock = get_clock(&self.rpc_client).await;
         config
             .last_reset_at
-            .saturating_add(EPOCH_DURATION)
+            .saturating_add(COAL_EPOCH_DURATION)
             .saturating_sub(5) // Buffer
             .le(&clock.unix_timestamp)
     }
@@ -317,7 +317,7 @@ impl Miner {
     pub async fn find_bus(&self, resource: Resource) -> Pubkey {
         // Fetch the bus with the largest balance
         let bus_addresses = match resource {
-            Resource::Coal => BUS_ADDRESSES,
+            Resource::Coal => COAL_BUS_ADDRESSES,
             Resource::Ore => ORE_BUS_ADDRESSES,
             Resource::Ingots => SMELTER_BUS_ADDRESSES,
         };

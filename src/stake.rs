@@ -43,7 +43,7 @@ impl Miner {
         let ix = match resource {
             Resource::Ingots => smelter_api::instruction::stake(signer.pubkey(), sender, amount),
             Resource::Ore => ore_api::instruction::stake(signer.pubkey(), sender, amount),
-            _ => coal_api::instruction::stake(signer.pubkey(), sender, amount),
+            _ => coal_api::instruction::stake_coal(signer.pubkey(), sender, amount),
         };
         self.send_and_confirm(&[ix], ComputeBudget::Fixed(CU_LIMIT_CLAIM), false)
             .await

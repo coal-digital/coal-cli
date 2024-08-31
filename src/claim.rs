@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use colored::*;
-use coal_api::consts::MINT_ADDRESS;
+use coal_api::consts::COAL_MINT_ADDRESS;
 use solana_program::pubkey::Pubkey;
 use solana_sdk::signature::Signer;
 use spl_token::amount_to_ui_amount;
@@ -10,7 +10,7 @@ use crate::{
     args::ClaimArgs,
     cu_limits::CU_LIMIT_CLAIM,
     send_and_confirm::ComputeBudget,
-    utils::{Resource, amount_f64_to_u64, ask_confirm, get_proof_with_authority, get_resource_name, get_resource_from_str},
+    utils::{Resource, amount_f64_to_u64, ask_confirm, get_proof_with_authority, get_resource_name, get_resource_from_str, get_resource_mint},
     Miner,
 };
 
@@ -29,7 +29,7 @@ impl Miner {
                 let wallet = Pubkey::from_str(&to).expect("Failed to parse wallet address");
                 let benefiary_tokens = spl_associated_token_account::get_associated_token_address(
                     &wallet,
-                    &MINT_ADDRESS,
+                    &COAL_MINT_ADDRESS,
                 );
                 if self
                     .rpc_client
@@ -41,7 +41,7 @@ impl Miner {
                         spl_associated_token_account::instruction::create_associated_token_account(
                             &pubkey,
                             &wallet,
-                            &coal_api::consts::MINT_ADDRESS,
+                            &coal_api::consts::COAL_MINT_ADDRESS,
                             &spl_token::id(),
                         ),
                     );
@@ -82,7 +82,7 @@ impl Miner {
                 ixs.push(ore_api::instruction::claim(pubkey, beneficiary, amount));
             },
             _ => {
-                ixs.push(coal_api::instruction::claim(pubkey, beneficiary, amount));
+                ixs.push(coal_api::instruction::claim_coal(pubkey, beneficiary, amount));
             },
         }
         self.send_and_confirm(&ixs, ComputeBudget::Fixed(CU_LIMIT_CLAIM), false)
@@ -96,11 +96,7 @@ impl Miner {
         let client = self.rpc_client.clone();
 
         // Get mint address
-        let mint_address = match resource.clone() {
-            Resource::Ingots => smelter_api::consts::MINT_ADDRESS,
-            Resource::Ore => ore_api::consts::MINT_ADDRESS,
-            _ata=> coal_api::consts::MINT_ADDRESS,
-        };
+        let mint_address = get_resource_mint(&resource);
 
         // Build instructions.
         let token_account_pubkey = spl_associated_token_account::get_associated_token_address(

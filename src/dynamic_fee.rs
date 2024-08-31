@@ -1,6 +1,6 @@
 use crate::Miner;
 
-use coal_api::consts::BUS_ADDRESSES;
+use coal_api::consts::COAL_BUS_ADDRESSES;
 use reqwest::Client;
 use serde_json::{json, Value};
 
@@ -48,7 +48,7 @@ impl Miner {
         // Build fee estimate request
         let client = Client::new();
         let ore_addresses: Vec<String> = std::iter::once(coal_api::ID.to_string())
-            .chain(BUS_ADDRESSES.iter().map(|pubkey| pubkey.to_string()))
+            .chain(COAL_BUS_ADDRESSES.iter().map(|pubkey| pubkey.to_string()))
             .collect();
         let body = match strategy {
             FeeStrategy::Helius => Some(json!({

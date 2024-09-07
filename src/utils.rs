@@ -3,7 +3,7 @@ use std::{io::Read, time::Duration};
 use cached::proc_macro::cached;
 use coal_api::{
     consts::*,
-    state::{Config, Proof, Treasury},
+    state::{Config, WoodConfig, Proof, Treasury},
 };
 use coal_utils::AccountDeserialize;
 use serde::Deserialize;
@@ -23,6 +23,42 @@ pub enum Resource {
     Coal,
     Ore,
     Ingots,
+    Wood,
+}
+
+pub enum ConfigType {
+    General(Config),
+    Wood(WoodConfig),
+}
+
+impl ConfigType {
+    pub fn last_reset_at(&self) -> i64 {
+        match self {
+            ConfigType::General(config) => config.last_reset_at,
+            ConfigType::Wood(config) => config.last_reset_at,
+        }
+    }
+
+    pub fn min_difficulty(&self) -> u64 {
+        match self {
+            ConfigType::General(config) => config.min_difficulty,
+            ConfigType::Wood(config) => config.min_difficulty,
+        }
+    }
+
+    pub fn base_reward_rate(&self) -> u64 {
+        match self {
+            ConfigType::General(config) => config.base_reward_rate,
+            ConfigType::Wood(config) => config.base_reward_rate,
+        }
+    }
+
+    pub fn top_balance(&self) -> u64 {
+        match self {
+            ConfigType::General(config) => config.top_balance,
+            ConfigType::Wood(config) => config.top_balance,
+        }
+    }
 }
 
 pub async fn _get_treasury(client: &RpcClient) -> Treasury {
@@ -33,20 +69,38 @@ pub async fn _get_treasury(client: &RpcClient) -> Treasury {
     *Treasury::try_from_bytes(&data).expect("Failed to parse treasury account")
 }
 
-pub async fn get_config(client: &RpcClient, resource: Resource) -> Config {
+pub async fn get_config(client: &RpcClient, resource: &Resource) -> ConfigType {
     let config_address = match resource {
         Resource::Coal => &coal_api::consts::COAL_CONFIG_ADDRESS,
         Resource::Ore => &ore_api::consts::CONFIG_ADDRESS,
         Resource::Ingots => &smelter_api::consts::CONFIG_ADDRESS,
+        _ => {
+            println!("Invalid resource type specified.");
+            std::process::exit(1);
+        },
     };
-    println!("Resource: {}", get_resource_name(&resource));
-    println!("Config address: {}", config_address);
+
     let data = client
         .get_account_data( config_address)
         .await
         .expect("Failed to get config account");
 
-    *Config::try_from_bytes(&data).expect("Failed to parse config account")
+    match resource {
+        Resource::Wood => ConfigType::Wood(
+            *WoodConfig::try_from_bytes(&data).expect("Failed to parse wood config account")
+        ),
+        _ => ConfigType::General(
+            *Config::try_from_bytes(&data).expect("Failed to parse config account")
+        ),
+    }
+}
+
+pub async fn get_wood_config(client: &RpcClient) -> WoodConfig {
+    let data = client
+        .get_account_data(&coal_api::consts::WOOD_CONFIG_ADDRESS)
+        .await
+        .expect("Failed to get wood config account");
+    *WoodConfig::try_from_bytes(&data).expect("Failed to parse wood config account")
 }
 
 pub async fn get_proof_with_authority(client: &RpcClient, authority: Pubkey, resource: Resource) -> Proof {
@@ -56,9 +110,9 @@ pub async fn get_proof_with_authority(client: &RpcClient, authority: Pubkey, res
 
 pub async fn get_updated_proof_with_authority(
     client: &RpcClient,
+    resource: &Resource,
     authority: Pubkey,
     lash_hash_at: i64,
-    resource: Resource,
 ) -> Proof {
     loop {
         let proof = get_proof_with_authority(client, authority, resource.clone()).await;
@@ -143,6 +197,7 @@ pub fn get_resource_from_str(resource: &Option<String>) -> Resource {
             "ore" => Resource::Ore,
             "ingot" => Resource::Ingots,
             "coal" => Resource::Coal,
+            "wood" => Resource::Wood,
             _ => {
                 println!("Error: Invalid resource type specified.");
                 std::process::exit(1);
@@ -155,6 +210,7 @@ pub fn get_resource_from_str(resource: &Option<String>) -> Resource {
 pub fn get_resource_name(resource: &Resource) -> String {
     match resource {
         Resource::Coal => "COAL".to_string(),
+        Resource::Wood => "WOOD".to_string(),
         Resource::Ingots => "INGOTS".to_string(),
         Resource::Ore => "ORE".to_string(),
     }
@@ -163,6 +219,7 @@ pub fn get_resource_name(resource: &Resource) -> String {
 pub fn get_resource_mint(resource: &Resource) -> Pubkey {
     match resource {
         Resource::Coal => coal_api::consts::COAL_MINT_ADDRESS,
+        Resource::Wood => coal_api::consts::WOOD_MINT_ADDRESS,
         Resource::Ingots => smelter_api::consts::MINT_ADDRESS,
         Resource::Ore => ore_api::consts::MINT_ADDRESS,
     }
@@ -172,10 +229,18 @@ pub fn get_resource_mint(resource: &Resource) -> Pubkey {
 pub fn proof_pubkey(authority: Pubkey, resource: Resource) -> Pubkey {
     let program_id = match resource {
         Resource::Coal => &coal_api::ID,
+        Resource::Wood => &coal_api::ID,
         Resource::Ore => &ore_api::ID,
         Resource::Ingots => &smelter_api::ID,
     };
-    Pubkey::find_program_address(&[COAL_PROOF, authority.as_ref()], program_id).0
+
+    let seed = match resource {
+        Resource::Coal => coal_api::consts::COAL_PROOF,
+        Resource::Wood => coal_api::consts::PROOF_V2,
+        Resource::Ore => ore_api::consts::PROOF,
+        Resource::Ingots => smelter_api::consts::PROOF,
+    };
+    Pubkey::find_program_address(&[seed, authority.as_ref()], program_id).0
 }
 
 #[cached]

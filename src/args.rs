@@ -99,6 +99,13 @@ pub struct MineArgs {
         default_value = "none"
     )]
     pub merged: String,
+
+    #[arg(
+        long,
+        value_name = "RESOURCE",
+        help = "The resource to mine."
+    )]
+    pub resource: Option<String>,
 }
 
 #[derive(Parser, Debug)]
@@ -150,7 +157,7 @@ pub struct StakeArgs {
     #[arg(
         long,
         value_name = "RESOURCE",
-        help = "The token to stake."
+        help = "The resource to stake."
     )]
     pub resource: Option<String>,
 }

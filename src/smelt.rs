@@ -1,3 +1,4 @@
+use coal_api::consts::ONE_MINUTE;
 use solana_sdk::signer::Signer;
 
 use smelter_api::consts::MAX_EFFICIENCY_BONUS_PERCENTAGE;
@@ -17,7 +18,7 @@ use crate::{
 impl Miner {
     pub async fn smelt(&self, args: SmeltArgs) {
         let signer = self.signer();
-        self.open_smelter().await;
+        self.open(Resource::Ingots).await;
 
         // Check num threads
         self.check_num_cores(args.cores);
@@ -40,8 +41,8 @@ impl Miner {
         loop {
             // Fetch proof
             let (config, proof, coal_token_account, ore_token_account) = tokio::join!(
-                get_config(&self.rpc_client, Resource::Ingots),
-                get_updated_proof_with_authority(&self.rpc_client, signer.pubkey(), last_hash_at, Resource::Ingots),
+                get_config(&self.rpc_client, &Resource::Ingots),
+                get_updated_proof_with_authority(&self.rpc_client, &Resource::Ingots, signer.pubkey(), last_hash_at),
                 self.rpc_client.get_token_account(&coal_token_account_address),
                 self.rpc_client.get_token_account(&ore_token_account_address),
             );
@@ -96,8 +97,8 @@ impl Miner {
                 } else {
                     "".to_string()
                 },
-                calculate_multiplier(proof.balance, config.top_balance),
-                calculate_discount(proof.balance, config.top_balance)
+                calculate_multiplier(proof.balance, config.top_balance()),
+                calculate_discount(proof.balance, config.top_balance())
             );
 
             last_hash_at = proof.last_hash_at;
@@ -106,10 +107,10 @@ impl Miner {
             last_ore_balance = ore_balance;
 
             // Calculate cutoff time
-            let cutoff_time = self.get_cutoff(proof, args.buffer_time).await;
+            let cutoff_time = self.get_cutoff(proof.last_hash_at, ONE_MINUTE, args.buffer_time).await;
 
-            // Run drillx_2
-            let solution = Self::find_hash_par(proof, cutoff_time, args.cores, config.min_difficulty as u32, Resource::Ingots).await;
+            // Run drillx
+            let solution = Self::find_hash_par(proof.challenge, cutoff_time, args.cores, config.min_difficulty() as u32, Resource::Wood).await;
 
 
             let mut compute_budget = 500_000;
@@ -119,7 +120,8 @@ impl Miner {
             ];
 
             // Reset if needed
-            let config = get_config(&self.rpc_client, Resource::Ingots).await;
+            let config = get_config(&self.rpc_client, &Resource::Ingots).await;
+            
             if self.should_reset(config).await {
                 compute_budget += 100_000;
                 ixs.push(smelter_api::instruction::reset(signer.pubkey()));

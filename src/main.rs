@@ -2,6 +2,7 @@ mod args;
 mod balance;
 mod benchmark;
 mod busses;
+mod chop;
 mod claim;
 mod close;
 mod config;
@@ -55,6 +56,9 @@ enum Commands {
     #[command(about = "Fetch the bus account balances")]
     Busses(BussesArgs),
 
+    #[command(about = "Chop some wood")]
+    Chop(MineArgs),
+
     #[command(about = "Claim your mining rewards")]
     Claim(ClaimArgs),
 
@@ -83,12 +87,17 @@ enum Commands {
     Transfer(TransferArgs),
 
     #[cfg(feature = "admin")]
-    #[command(about = "Initialize the program")]
+    #[command(about = "Initialize coal")]
     Initialize(InitializeArgs),
+
+    #[cfg(feature = "admin")]
+    #[command(about = "Initialize wood")]
+    InitializeWood(InitializeArgs),
 
     #[cfg(feature = "admin")]
     #[command(about = "Initialize the smelter program")]
     InitializeSmelter(InitializeArgs),
+
 }
 
 #[derive(Parser, Debug)]
@@ -228,6 +237,9 @@ async fn main() {
         Commands::Busses(_) => {
             miner.busses().await;
         }
+        Commands::Chop(args) => {
+            miner.chop(args).await;
+        }
         Commands::Claim(args) => {
             miner.claim(args).await;
         }
@@ -258,6 +270,10 @@ async fn main() {
         #[cfg(feature = "admin")]
         Commands::Initialize(_) => {
             miner.initialize().await;
+        }
+        #[cfg(feature = "admin")]
+        Commands::InitializeWood(_) => {
+            miner.initialize_wood().await;
         }
         #[cfg(feature = "admin")]
         Commands::InitializeSmelter(_) => {

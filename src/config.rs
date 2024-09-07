@@ -7,14 +7,15 @@ use crate::{
 
 impl Miner {
     pub async fn config(&self) {
-        let config = get_config(&self.rpc_client, Resource::Coal).await;
-        println!("{}: {}", "Last reset at".bold(), config.last_reset_at);
-        println!("{}: {}", "Min difficulty".bold(), config.min_difficulty);
-        println!("{}: {}", "Base reward rate".bold(), config.base_reward_rate);
+        let config = get_config(&self.rpc_client, &Resource::Coal).await;
+
+        println!("{}: {}", "Last reset at".bold(), config.last_reset_at());
+        println!("{}: {}", "Min difficulty".bold(), config.min_difficulty());
+        println!("{}: {}", "Base reward rate".bold(), config.base_reward_rate());
         println!(
             "{}: {} COAL",
             "Top stake".bold(),
-            amount_u64_to_string(config.top_balance)
+            amount_u64_to_string(config.top_balance())
         );
     }
 }

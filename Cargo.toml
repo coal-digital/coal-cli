@@ -27,14 +27,14 @@ chrono = "0.4.38"
 clap = { version = "4.4.12", features = ["derive"] }
 colored = "2.0"
 core_affinity = "0.8.1" 
-drillx_2 = "1.0.0"
+drillx = "2.1.0"
 futures = "0.3.30"
 indicatif = "0.17.8"
 num_cpus = "1.16.0"
 # coal-api = "2.3.0"
 # coal-utils = "2.3.0"
-smelter-api = "1.0.0"
-smelter-utils = "1.0.0"
+# smelter-api = "1.0.0"
+# smelter-utils = "1.0.0"
 ore-api = "2.1.0"
 ore-utils = "2.1.0"
 rand = "0.8.4"
@@ -61,6 +61,6 @@ coal-api = { path = "../coal/api" }
 coal-utils = { path = "../coal/utils" }
 # ore-api = { path = "../ore/api" }
 # ore-utils = { path = "../ore/utils" }
-# smelter-api = { path = "../smelter/api" }
-# smelter-utils = { path = "../smelter/utils" }
+smelter-api = { path = "../smelter/api" }
+smelter-utils = { path = "../smelter/utils" }
 

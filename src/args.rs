@@ -29,7 +29,14 @@ pub struct BenchmarkArgs {
 }
 
 #[derive(Parser, Debug)]
-pub struct BussesArgs {}
+pub struct BussesArgs {
+    #[arg(
+        long,
+        value_name = "RESOURCE",
+        help = "The token to query."
+    )]
+    pub resource: Option<String>,
+}
 
 #[derive(Parser, Debug)]
 pub struct ClaimArgs {
@@ -59,13 +66,20 @@ pub struct CloseArgs {
     #[arg(
         long,
         value_name = "RESOURCE",
-        help = "The token to claim."
+        help = "The proof to close."
     )]
     pub resource: Option<String>,
 }
 
 #[derive(Parser, Debug)]
-pub struct ConfigArgs {}
+pub struct ConfigArgs {
+    #[arg(
+        long,
+        value_name = "RESOURCE",
+        help = "The resource to query."
+    )]
+    pub resource: Option<String>,
+}
 
 #[cfg(feature = "admin")]
 #[derive(Parser, Debug)]
@@ -109,13 +123,41 @@ pub struct MineArgs {
 }
 
 #[derive(Parser, Debug)]
+pub struct ChopArgs {
+    #[arg(
+        long,
+        short,
+        value_name = "CORES_COUNT",
+        help = "The number of CPU cores to allocate to mining.",
+        default_value = "1"
+    )]
+    pub cores: u64,
+
+    #[arg(
+        long,
+        short,
+        value_name = "SECONDS",
+        help = "The number seconds before the deadline to stop mining and start submitting.",
+        default_value = "5"
+    )]
+    pub buffer_time: u64,
+}
+
+#[derive(Parser, Debug)]
 pub struct ProofArgs {
     #[arg(value_name = "ADDRESS", help = "The address of the proof to fetch.")]
     pub address: Option<String>,
 }
 
 #[derive(Parser, Debug)]
-pub struct RewardsArgs {}
+pub struct RewardsArgs {
+    #[arg(
+        long,
+        value_name = "RESOURCE",
+        help = "The token to query."
+    )]
+    pub resource: Option<String>,
+}
 
 
 #[derive(Parser, Debug)]
@@ -179,13 +221,4 @@ pub struct TransferArgs {
         help = "The token to transfer."
     )]
     pub resource: Option<String>,
-}
-
-#[derive(Parser, Debug)]
-pub struct UpgradeArgs {
-    #[arg(
-        value_name = "AMOUNT",
-        help = "The amount of COAL to upgrade from v1 to v2. Defaults to max."
-    )]
-    pub amount: Option<f64>,
 }

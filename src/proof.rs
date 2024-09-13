@@ -19,24 +19,24 @@ impl Miner {
         } else {
             proof_pubkey(signer.pubkey(), Resource::Coal)
         };
-        let proof = get_proof(&self.rpc_client, address).await;
+        let proof = get_proof(&self.rpc_client, &Resource::Coal, address).await;
         println!("Address: {:?}", address);
-        println!("Authority: {:?}", proof.authority);
+        println!("Authority: {:?}", proof.authority());
         println!(
             "Balance: {:?} COAL",
-            amount_to_ui_amount(proof.balance, TOKEN_DECIMALS)
+            amount_to_ui_amount(proof.balance(), TOKEN_DECIMALS)
         );
         println!(
             "Last hash: {}",
-            solana_sdk::hash::Hash::new_from_array(proof.last_hash).to_string()
+            solana_sdk::hash::Hash::new_from_array(proof.last_hash()).to_string()
         );
-        println!("Last hash at: {:?}", proof.last_hash_at);
-        println!("Last stake at: {:?}", proof.last_stake_at);
-        println!("Miner: {:?}", proof.miner);
-        println!("Total hashes: {:?}", proof.total_hashes);
+        println!("Last hash at: {:?}", proof.last_hash_at());
+        println!("Last stake at: {:?}", proof.last_stake_at());
+        println!("Miner: {:?}", proof.miner());
+        println!("Total hashes: {:?}", proof.total_hashes());
         println!(
             "Total rewards: {:?} COAL",
-            amount_to_ui_amount(proof.total_rewards, TOKEN_DECIMALS)
+            amount_to_ui_amount(proof.total_rewards(), TOKEN_DECIMALS)
         );
     }
 }

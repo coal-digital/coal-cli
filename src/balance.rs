@@ -23,7 +23,7 @@ impl Miner {
             signer.pubkey()
         };
         let resource = get_resource_from_str(&args.resource);
-        let proof = get_proof_with_authority(&self.rpc_client, address, resource.clone()).await;
+        let proof = get_proof_with_authority(&self.rpc_client, address, &resource).await;
         let token_mint: Pubkey = get_resource_mint(&resource);
         let token_account_address = spl_associated_token_account::get_associated_token_address(
             &address,
@@ -43,7 +43,7 @@ impl Miner {
             "Balance: {} {}\nStake: {} {}",
             token_balance,
             resource_name,
-            amount_u64_to_string(proof.balance),
+            amount_u64_to_string(proof.balance()),
             resource_name,
         )
     }

@@ -20,7 +20,7 @@ impl Miner {
         let pubkey = signer.pubkey();
         let resource = get_resource_from_str(&args.resource);
 
-        let proof = get_proof_with_authority(&self.rpc_client, pubkey, resource.clone()).await;
+        let proof = get_proof_with_authority(&self.rpc_client, pubkey, &resource).await;
         let mut ixs = vec![];
         let beneficiary = match args.to {
             None => self.initialize_ata(pubkey, resource.clone()).await,
@@ -54,7 +54,7 @@ impl Miner {
         let amount = if let Some(amount) = args.amount {
             amount_f64_to_u64(amount)
         } else {
-            proof.balance
+            proof.balance()
         };
 
         // Confirm user wants to claim

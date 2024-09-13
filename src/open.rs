@@ -27,11 +27,11 @@ impl Miner {
         // For merged mining we need to ensure both are closed if the proofs are not already merged
         if ore_proof_result.is_ok() && coal_proof_result.is_ok() {
             let (coal_proof, ore_proof) = tokio::join!(
-                get_proof(&self.rpc_client, coal_proof_address),
-                get_proof(&self.rpc_client, ore_proof_address)
+                get_proof(&self.rpc_client, &Resource::Coal, coal_proof_address),
+                get_proof(&self.rpc_client, &Resource::Ore, ore_proof_address)
             );
 
-            if coal_proof.last_hash.eq(&ore_proof.last_hash) && coal_proof.challenge.eq(&ore_proof.challenge) {
+            if coal_proof.last_hash().eq(&ore_proof.last_hash()) && coal_proof.challenge().eq(&ore_proof.challenge()) {
                 // Proofs are already merged
                 return Ok(true);
             }
@@ -61,6 +61,12 @@ impl Miner {
         // Return early if miner is already registered
         let signer = self.signer();
         let fee_payer = self.fee_payer();
+
+        // println!("Patching wood...");
+        // let ix = coal_api::instruction::patch_wood(signer.pubkey());
+        // self.send_and_confirm(&[ix], ComputeBudget::Fixed(400_000), false).await.ok();
+        // println!("Wood patched...");
+
         let proof_address = proof_pubkey(signer.pubkey(), resource.clone());
         if self.rpc_client.get_account(&proof_address).await.is_ok() {
             return;

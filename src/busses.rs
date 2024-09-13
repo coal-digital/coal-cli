@@ -1,22 +1,41 @@
 use coal_api::{
-    consts::{COAL_BUS_ADDRESSES, TOKEN_DECIMALS},
-    state::Bus,
+    consts::TOKEN_DECIMALS,
+    state::{Bus, WoodBus},
 };
 use coal_utils::AccountDeserialize;
 
-use crate::Miner;
+use crate::{Miner, args::BussesArgs, utils::{get_resource_from_str, get_resource_name, get_resource_bus_addresses, Resource}};
 
 impl Miner {
-    pub async fn busses(&self) {
+    pub async fn busses(&self, args: BussesArgs) {
+        let resource = get_resource_from_str(&args.resource);
+        let resource_name = get_resource_name(&resource);
+        let bus_addresses = get_resource_bus_addresses(&resource);
+        
         let client = self.rpc_client.clone();
-        for address in COAL_BUS_ADDRESSES.iter() {
+        
+        for address in bus_addresses.iter() {
             let data = client.get_account_data(address).await.unwrap();
-            match Bus::try_from_bytes(&data) {
-                Ok(bus) => {
-                    let rewards = (bus.rewards as f64) / 10f64.powf(TOKEN_DECIMALS as f64);
-                    println!("Bus {}: {:} COAL", bus.id, rewards);
+
+            match resource {
+                Resource::Wood => {
+                    match WoodBus::try_from_bytes(&data) {
+                        Ok(bus) => {
+                            let rewards = (bus.rewards as f64) / 10f64.powf(TOKEN_DECIMALS as f64);
+                            println!("Bus {}: {:} {}", bus.id, rewards, resource_name);
+                        }
+                        Err(_) => {}
+                    }
                 }
-                Err(_) => {}
+                _ => {
+                    match Bus::try_from_bytes(&data) {
+                        Ok(bus) => {
+                            let rewards = (bus.rewards as f64) / 10f64.powf(TOKEN_DECIMALS as f64);
+                            println!("Bus {}: {:} {}", bus.id, rewards, resource_name);
+                        }
+                        Err(_) => {}
+                    }
+                }
             }
         }
     }

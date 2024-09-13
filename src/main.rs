@@ -57,7 +57,7 @@ enum Commands {
     Busses(BussesArgs),
 
     #[command(about = "Chop some wood")]
-    Chop(MineArgs),
+    Chop(ChopArgs),
 
     #[command(about = "Claim your mining rewards")]
     Claim(ClaimArgs),
@@ -234,8 +234,8 @@ async fn main() {
         Commands::Benchmark(args) => {
             miner.benchmark(args).await;
         }
-        Commands::Busses(_) => {
-            miner.busses().await;
+        Commands::Busses(args) => {
+            miner.busses(args).await;
         }
         Commands::Chop(args) => {
             miner.chop(args).await;
@@ -246,8 +246,8 @@ async fn main() {
         Commands::Close(args) => {
             miner.close(args).await;
         }
-        Commands::Config(_) => {
-            miner.config().await;
+        Commands::Config(args) => {
+            miner.config(args).await;
         }
         Commands::Mine(args) => {
             miner.mine(args).await;
@@ -255,8 +255,8 @@ async fn main() {
         Commands::Proof(args) => {
             miner.proof(args).await;
         }
-        Commands::Rewards(_) => {
-            miner.rewards().await;
+        Commands::Rewards(args) => {
+            miner.rewards(args).await;
         }
         Commands::Smelt(args) => {
             miner.smelt(args).await;

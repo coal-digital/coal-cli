@@ -86,31 +86,31 @@ impl Miner {
             
             println!(
                 "\n\nStake: {} INGOT\n{}  Multiplier: {:12}x\n  Efficiency Bonus: {:12}%\n",
-                amount_u64_to_string(proof.balance),
+                amount_u64_to_string(proof.balance()),
                 if last_hash_at.gt(&0) {
                     format!(
                         "  Change: {} INGOT\n  Coal Burn: {} COAL\n  Ore Wrapped: {} ORE\n",
-                        amount_u64_to_string(proof.balance.saturating_sub(last_balance)),
+                        amount_u64_to_string(proof.balance().saturating_sub(last_balance)),
                         amount_u64_to_string(last_coal_balance.saturating_sub(coal_balance)),
                         amount_u64_to_string(last_ore_balance.saturating_sub(ore_balance))
                     )
                 } else {
                     "".to_string()
                 },
-                calculate_multiplier(proof.balance, config.top_balance()),
-                calculate_discount(proof.balance, config.top_balance())
+                calculate_multiplier(proof.balance(), config.top_balance()),
+                calculate_discount(proof.balance(), config.top_balance())
             );
 
-            last_hash_at = proof.last_hash_at;
-            last_balance = proof.balance;
+            last_hash_at = proof.last_hash_at();
+            last_balance = proof.balance();
             last_coal_balance = coal_balance;
             last_ore_balance = ore_balance;
 
             // Calculate cutoff time
-            let cutoff_time = self.get_cutoff(proof.last_hash_at, ONE_MINUTE, args.buffer_time).await;
+            let cutoff_time = self.get_cutoff(proof.last_hash_at(), ONE_MINUTE, args.buffer_time).await;
 
             // Run drillx
-            let solution = Self::find_hash_par(proof.challenge, cutoff_time, args.cores, config.min_difficulty() as u32, Resource::Wood).await;
+            let solution = Self::find_hash_par(proof.challenge(), cutoff_time, args.cores, config.min_difficulty() as u32, Resource::Wood).await;
 
 
             let mut compute_budget = 500_000;

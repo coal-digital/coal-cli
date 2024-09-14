@@ -4,7 +4,7 @@ use drillx::{
     equix::{self},
     Hash, Solution,
 };
-use coal_api::{consts::*, state::{Bus, WoodBus}};
+use coal_api::{consts::*, state::Bus};
 use coal_utils::AccountDeserialize;
 use rand::Rng;
 use solana_program::{pubkey::Pubkey, instruction::Instruction};
@@ -453,22 +453,10 @@ impl Miner {
             let mut top_bus = bus_addresses[0];
             for account in accounts {
                 if let Some(account) = account {
-                    match resource {
-                        Resource::Wood => {
-                            if let Ok(bus) = WoodBus::try_from_bytes(&account.data) {
-                                if bus.rewards.gt(&top_bus_balance) {
-                                    top_bus_balance = bus.rewards;
-                                    top_bus = bus_addresses[bus.id as usize];
-                                }
-                            }
-                        }
-                        _ => {
-                            if let Ok(bus) = Bus::try_from_bytes(&account.data) {
-                                if bus.rewards.gt(&top_bus_balance) {
-                                    top_bus_balance = bus.rewards;
-                                    top_bus = bus_addresses[bus.id as usize];
-                                }
-                            }
+                    if let Ok(bus) = Bus::try_from_bytes(&account.data) {
+                        if bus.rewards.gt(&top_bus_balance) {
+                            top_bus_balance = bus.rewards;
+                            top_bus = bus_addresses[bus.id as usize];
                         }
                     }
 

@@ -8,6 +8,35 @@ use crate::{
 };
 
 impl Miner {
+    pub async fn open(&self, resource: Resource) {
+        // Return early if miner is already registered
+        let signer = self.signer();
+        let fee_payer = self.fee_payer();
+
+        // println!("Patching wood...");
+        // let ix = coal_api::instruction::patch_wood(signer.pubkey());
+        // self.send_and_confirm(&[ix], ComputeBudget::Fixed(400_000), false).await.ok();
+        // println!("Wood patched...");
+
+        let proof_address = proof_pubkey(signer.pubkey(), resource.clone());
+        if self.rpc_client.get_account(&proof_address).await.is_ok() {
+            return;
+        }
+
+        // Sign and send transaction.
+        println!("Generating {} challenge...", get_resource_name(&resource));
+        let ix = match resource {
+            Resource::Coal => coal_api::instruction::open_coal(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()),
+            Resource::Wood => coal_api::instruction::open_wood(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()),
+            Resource::Ore => ore_api::instruction::open(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()),
+            Resource::Ingots => smelter_api::instruction::open(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()),
+        };
+        
+        self.send_and_confirm(&[ix], ComputeBudget::Fixed(400_000), false)
+            .await
+            .ok();
+    }
+
     pub async fn open_merged(&self) -> Result<bool, &str> {
         // Return early if miner is already registered
         let signer = self.signer();
@@ -55,34 +84,5 @@ impl Miner {
 
     
         Ok(true)
-    }
-
-    pub async fn open(&self, resource: Resource) {
-        // Return early if miner is already registered
-        let signer = self.signer();
-        let fee_payer = self.fee_payer();
-
-        // println!("Patching wood...");
-        // let ix = coal_api::instruction::patch_wood(signer.pubkey());
-        // self.send_and_confirm(&[ix], ComputeBudget::Fixed(400_000), false).await.ok();
-        // println!("Wood patched...");
-
-        let proof_address = proof_pubkey(signer.pubkey(), resource.clone());
-        if self.rpc_client.get_account(&proof_address).await.is_ok() {
-            return;
-        }
-
-        // Sign and send transaction.
-        println!("Generating {} challenge...", get_resource_name(&resource));
-        let ix = match resource {
-            Resource::Coal => coal_api::instruction::open_coal(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()),
-            Resource::Wood => coal_api::instruction::open_wood(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()),
-            Resource::Ore => ore_api::instruction::open(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()),
-            Resource::Ingots => smelter_api::instruction::open(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()),
-        };
-        
-        self.send_and_confirm(&[ix], ComputeBudget::Fixed(400_000), false)
-            .await
-            .ok();
     }
 }

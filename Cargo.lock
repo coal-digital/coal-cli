@@ -3851,7 +3851,9 @@ checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
 
 [[package]]
 name = "smelter-api"
-version = "1.0.0"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a420e0ac1f747980deaf60841a2cc2eec70ed1c5ff8d5c871edc340ec50ff22a"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -3869,7 +3871,9 @@ dependencies = [
 
 [[package]]
 name = "smelter-utils"
-version = "1.0.0"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "4f5c350489d1dc4132fc708882a470d7c4cbb47cc94d8808bcb1ca8f86e264ad"
 dependencies = [
  "bytemuck",
  "solana-program",

@@ -149,7 +149,7 @@ pub async fn get_config(client: &RpcClient, resource: &Resource) -> ConfigType {
         Resource::Ingots => &smelter_api::consts::CONFIG_ADDRESS,
         Resource::Ore => &ore_api::consts::CONFIG_ADDRESS,
     };
-    println!("config_address: {:?}", config_address);
+
     let data = client
         .get_account_data( config_address)
         .await

@@ -110,7 +110,7 @@ impl Miner {
             let cutoff_time = self.get_cutoff(proof.last_hash_at(), ONE_MINUTE, args.buffer_time).await;
 
             // Run drillx
-            let solution = Self::find_hash_par(proof.challenge(), cutoff_time, args.cores, config.min_difficulty() as u32, Resource::Wood).await;
+            let solution = Self::find_hash_par(proof.challenge(), cutoff_time, args.cores, config.min_difficulty() as u32, &Resource::Ingots).await;
 
 
             let mut compute_budget = 500_000;

@@ -105,7 +105,7 @@ impl Miner {
             let cutoff_time = self.get_cutoff(proof.last_hash_at(), duration, args.buffer_time).await;
 
             // Run drillx
-            let solution = Self::find_hash_par(proof.challenge(), cutoff_time, args.cores, min_difficulty as u32, Resource::Coal)
+            let solution = Self::find_hash_par(proof.challenge(), cutoff_time, args.cores, min_difficulty as u32, &resource)
                 .await;
 
 
@@ -253,7 +253,7 @@ impl Miner {
 
             // Run drillx
             let min_difficulty = coal_min_difficulty.max(ore_min_difficulty);
-            let solution = Self::find_hash_par(coal_proof.challenge(), cutoff_time, args.cores, min_difficulty as u32, Resource::Coal)
+            let solution = Self::find_hash_par(coal_proof.challenge(), cutoff_time, args.cores, min_difficulty as u32, &Resource::Coal)
                 .await;
 
 
@@ -295,7 +295,7 @@ impl Miner {
         cutoff_time: u64,
         cores: u64,
         min_difficulty: u32,
-        resource: Resource,
+        resource: &Resource,
     ) -> Solution {
         // Dispatch job to each thread
         let progress_bar = Arc::new(spinner::new_progress_bar());

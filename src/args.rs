@@ -147,6 +147,13 @@ pub struct ChopArgs {
 pub struct ProofArgs {
     #[arg(value_name = "ADDRESS", help = "The address of the proof to fetch.")]
     pub address: Option<String>,
+
+    #[arg(
+        long,
+        value_name = "RESOURCE",
+        help = "The token to query."
+    )]
+    pub resource: Option<String>,
 }
 
 #[derive(Parser, Debug)]

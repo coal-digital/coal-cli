@@ -7,19 +7,20 @@ use spl_token::amount_to_ui_amount;
 
 use crate::{
     args::ProofArgs,
-    utils::{Resource, get_proof, proof_pubkey},
+    utils::{get_proof, proof_pubkey, get_resource_from_str, get_resource_name},
     Miner,
 };
 
 impl Miner {
     pub async fn proof(&self, args: ProofArgs) {
         let signer = self.signer();
+        let resource = get_resource_from_str(&args.resource);
         let address = if let Some(address) = args.address {
             Pubkey::from_str(&address).unwrap()
         } else {
-            proof_pubkey(signer.pubkey(), Resource::Coal)
+            proof_pubkey(signer.pubkey(), resource.clone())
         };
-        let proof = get_proof(&self.rpc_client, &Resource::Coal, address).await;
+        let proof = get_proof(&self.rpc_client, &resource, address).await;
         println!("Address: {:?}", address);
         println!("Authority: {:?}", proof.authority());
         println!(
@@ -35,8 +36,9 @@ impl Miner {
         println!("Miner: {:?}", proof.miner());
         println!("Total hashes: {:?}", proof.total_hashes());
         println!(
-            "Total rewards: {:?} COAL",
-            amount_to_ui_amount(proof.total_rewards(), TOKEN_DECIMALS)
+            "Total rewards: {:?} {}",
+            amount_to_ui_amount(proof.total_rewards(), TOKEN_DECIMALS),
+            get_resource_name(&resource)
         );
     }
 }

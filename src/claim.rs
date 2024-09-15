@@ -81,8 +81,11 @@ impl Miner {
             Resource::Ore => {
                 ixs.push(ore_api::instruction::claim(pubkey, beneficiary, amount));
             },
-            _ => {
+            Resource::Coal => {
                 ixs.push(coal_api::instruction::claim_coal(pubkey, beneficiary, amount));
+            },
+            Resource::Wood => {
+                ixs.push(coal_api::instruction::claim_wood(pubkey, beneficiary, amount));
             },
         }
         self.send_and_confirm(&ixs, ComputeBudget::Fixed(CU_LIMIT_CLAIM), false)

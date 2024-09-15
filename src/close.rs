@@ -40,7 +40,12 @@ impl Miner {
         }
 
         // Submit close transaction
-        let ix = coal_api::instruction::close_coal(signer.pubkey());
+        let ix = match resource {
+            Resource::Coal => coal_api::instruction::close_coal(signer.pubkey()),
+            Resource::Wood => coal_api::instruction::close_wood(signer.pubkey()),
+            Resource::Ore => ore_api::instruction::close(signer.pubkey()),
+            Resource::Ingots => smelter_api::instruction::close(signer.pubkey()),
+        };
         self.send_and_confirm(&[ix], ComputeBudget::Fixed(500_000), false)
             .await
             .ok();

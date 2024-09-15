@@ -14,8 +14,8 @@ impl Miner {
     pub async fn close(&self, args: CloseArgs) {
         // Confirm proof exists
         let signer = self.signer();
-        let proof = get_proof_with_authority(&self.rpc_client, signer.pubkey(), &Resource::Coal).await;
         let resource = get_resource_from_str(&args.resource);
+        let proof = get_proof_with_authority(&self.rpc_client, signer.pubkey(), &resource).await;
 
         // Confirm the user wants to close.
         if !ask_confirm(

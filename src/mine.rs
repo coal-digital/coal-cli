@@ -99,7 +99,7 @@ impl Miner {
             let duration = match resource {
                 Resource::Coal => ONE_MINUTE,
                 Resource::Ore => ONE_MINUTE,
-                Resource::Wood => ONE_MINUTE * 2, // WOOD has a liveness tolerance of 1 minute
+                Resource::Wood => ONE_MINUTE,
                 _ => 0,
             };
             let cutoff_time = self.get_cutoff(proof.last_hash_at(), duration, args.buffer_time).await;

@@ -13,11 +13,6 @@ impl Miner {
         let signer = self.signer();
         let fee_payer = self.fee_payer();
 
-        // println!("Patching wood...");
-        // let ix = coal_api::instruction::patch_wood(signer.pubkey());
-        // self.send_and_confirm(&[ix], ComputeBudget::Fixed(400_000), false).await.ok();
-        // println!("Wood patched...");
-
         let proof_address = proof_pubkey(signer.pubkey(), resource.clone());
         if self.rpc_client.get_account(&proof_address).await.is_ok() {
             return;

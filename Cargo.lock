@@ -947,14 +947,13 @@ checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
 [[package]]
 name = "coal-api"
 version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8c56ccfe12f79109dcaf29b4e65c3b222fe5e05bec8704e9cb7d346e69313eff"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
  "coal-utils",
  "const-crypto",
  "drillx",
+ "mpl-core",
  "mpl-token-metadata",
  "num_enum 0.7.2",
  "solana-program",
@@ -979,8 +978,11 @@ dependencies = [
  "colored",
  "core_affinity",
  "drillx",
+ "forge-api",
+ "forge-utils",
  "futures",
  "indicatif",
+ "mpl-core",
  "num_cpus",
  "ore-api",
  "ore-utils",
@@ -1006,8 +1008,6 @@ dependencies = [
 [[package]]
 name = "coal-utils"
 version = "2.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2cc4a1589745ea8bc8b80222cceb0edc3e3b6a7875e2b4114c9e4172929b30f5"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -1679,6 +1679,36 @@ name = "foreign-types-shared"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
+
+[[package]]
+name = "forge-api"
+version = "2.4.0"
+dependencies = [
+ "array-const-fn-init",
+ "borsh 1.5.1",
+ "bytemuck",
+ "const-crypto",
+ "drillx",
+ "forge-utils",
+ "mpl-core",
+ "mpl-token-metadata",
+ "num_enum 0.7.2",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "static_assertions",
+ "thiserror",
+]
+
+[[package]]
+name = "forge-utils"
+version = "2.4.0"
+dependencies = [
+ "bytemuck",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+]
 
 [[package]]
 name = "form_urlencoded"
@@ -2520,6 +2550,44 @@ dependencies = [
  "libc",
  "wasi 0.11.0+wasi-snapshot-preview1",
  "windows-sys 0.48.0",
+]
+
+[[package]]
+name = "modular-bitfield"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a53d79ba8304ac1c4f9eb3b9d281f21f7be9d4626f72ce7df4ad8fbde4f38a74"
+dependencies = [
+ "modular-bitfield-impl",
+ "static_assertions",
+]
+
+[[package]]
+name = "modular-bitfield-impl"
+version = "0.11.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5a7d5f7076603ebc68de2dc6a650ec331a062a13abaa346975be747bbfa4b789"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
+name = "mpl-core"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "299e6db3f7d9ab8fba383e3c6e88f8869063e694cbeb56da8f1bdd355e255f8f"
+dependencies = [
+ "base64 0.22.1",
+ "borsh 0.10.3",
+ "modular-bitfield",
+ "num-derive 0.3.3",
+ "num-traits",
+ "rmp-serde",
+ "serde_json",
+ "solana-program",
+ "thiserror",
 ]
 
 [[package]]
@@ -3427,6 +3495,28 @@ dependencies = [
  "spin 0.9.8",
  "untrusted 0.9.0",
  "windows-sys 0.52.0",
+]
+
+[[package]]
+name = "rmp"
+version = "0.8.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "228ed7c16fa39782c3b3468e974aec2795e9089153cd08ee2e9aefb3613334c4"
+dependencies = [
+ "byteorder",
+ "num-traits",
+ "paste",
+]
+
+[[package]]
+name = "rmp-serde"
+version = "1.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "52e599a477cf9840e92f2cde9a7189e67b42c57532749bf90aea6ec10facd4db"
+dependencies = [
+ "byteorder",
+ "rmp",
+ "serde",
 ]
 
 [[package]]

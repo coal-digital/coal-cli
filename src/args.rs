@@ -85,6 +85,20 @@ pub struct ConfigArgs {
 #[derive(Parser, Debug)]
 pub struct InitializeArgs {}
 
+// #[cfg(feature = "admin")]
+#[derive(Parser, Debug)]
+pub struct InitializeToolArgs {}
+
+// #[cfg(feature = "admin")]
+#[derive(Parser, Debug)]
+pub struct MintToolArgs {}
+
+#[derive(Parser, Debug)]
+pub struct EquipArgs {}
+
+#[derive(Parser, Debug)]
+pub struct UnequipArgs {}
+
 #[derive(Parser, Debug)]
 pub struct MineArgs {
     #[arg(

@@ -10,6 +10,8 @@ mod cu_limits;
 mod dynamic_fee;
 #[cfg(feature = "admin")]
 mod initialize;
+// #[cfg(feature = "admin")]
+mod initialize_tool;
 mod mine;
 mod open;
 mod proof;
@@ -20,7 +22,8 @@ mod transfer;
 mod utils;
 mod smelt;
 mod replant;
-
+mod equip;
+mod unequip;
 use std::{sync::Arc, sync::RwLock};
 use futures::StreamExt;
 use tokio_tungstenite::connect_async;
@@ -101,6 +104,17 @@ enum Commands {
     #[cfg(feature = "admin")]
     #[command(about = "Initialize the smelter program")]
     InitializeSmelter(InitializeArgs),
+
+    // #[cfg(feature = "admin")]
+    #[command(about = "Initialize the tool")]
+    InitializeTool(InitializeToolArgs),
+    MintTool(MintToolArgs),
+
+    #[command(about = "Equip tool")]
+    Equip(EquipArgs),
+
+    #[command(about = "Unequip tool")]
+    Unequip(UnequipArgs),
 
 }
 
@@ -286,6 +300,19 @@ async fn main() {
         Commands::InitializeSmelter(_) => {
             miner.initialize_smelter().await;
         }
+       //  #[cfg(feature = "admin")]
+        Commands::InitializeTool(_) => {
+            miner.initialize_tool().await;
+        },
+        Commands::MintTool(_) => {
+            miner.mint_tool().await;
+        },
+        Commands::Equip(_) => {
+            miner.equip().await;
+        },
+        Commands::Unequip(_) => {
+            miner.unequip().await;
+        },
     }
 }
 

@@ -300,6 +300,10 @@ pub fn get_resource_bus_addresses(resource: &Resource) -> [Pubkey; BUS_COUNT] {
     }
 }
 
+pub fn get_tool_pubkey(authority: Pubkey) -> Pubkey {
+    Pubkey::find_program_address(&[COAL_TOOL, authority.as_ref()], &coal_api::id()).0
+}
+
 #[cached]
 pub fn proof_pubkey(authority: Pubkey, resource: Resource) -> Pubkey {
     let program_id = match resource {

@@ -10,8 +10,7 @@ mod cu_limits;
 mod dynamic_fee;
 #[cfg(feature = "admin")]
 mod initialize;
-// #[cfg(feature = "admin")]
-mod initialize_tool;
+mod craft;
 mod mine;
 mod open;
 mod proof;
@@ -24,6 +23,8 @@ mod smelt;
 mod replant;
 mod equip;
 mod unequip;
+mod inspect;
+
 use std::{sync::Arc, sync::RwLock};
 use futures::StreamExt;
 use tokio_tungstenite::connect_async;
@@ -105,16 +106,26 @@ enum Commands {
     #[command(about = "Initialize the smelter program")]
     InitializeSmelter(InitializeArgs),
 
-    // #[cfg(feature = "admin")]
+    #[cfg(feature = "admin")]
+    #[command(about = "Initialize the forge")]
+    InitializeForge(InitializeArgs),
+
+    #[cfg(feature = "admin")]
     #[command(about = "Initialize the tool")]
-    InitializeTool(InitializeToolArgs),
-    MintTool(MintToolArgs),
+    NewTool(NewToolArgs),
+
+    #[command(about = "Craft a pickaxe")]
+    Craft(CraftArgs),
+
 
     #[command(about = "Equip tool")]
     Equip(EquipArgs),
 
     #[command(about = "Unequip tool")]
     Unequip(UnequipArgs),
+
+    #[command(about = "Inspect tool")]
+    Inspect(InspectArgs),
 
 }
 
@@ -288,6 +299,18 @@ async fn main() {
         Commands::Transfer(args) => {
             miner.transfer(args).await;
         }
+        Commands::Craft(_) => {
+            miner.craft().await;
+        }
+        Commands::Equip(args) => {
+            miner.equip(args).await;
+        }
+        Commands::Unequip(_) => {
+            miner.unequip().await;
+        }
+        Commands::Inspect(args) => {
+            miner.inspect(args).await;
+        }
         #[cfg(feature = "admin")]
         Commands::Initialize(_) => {
             miner.initialize().await;
@@ -300,19 +323,14 @@ async fn main() {
         Commands::InitializeSmelter(_) => {
             miner.initialize_smelter().await;
         }
-       //  #[cfg(feature = "admin")]
-        Commands::InitializeTool(_) => {
-            miner.initialize_tool().await;
-        },
-        Commands::MintTool(_) => {
-            miner.mint_tool().await;
-        },
-        Commands::Equip(_) => {
-            miner.equip().await;
-        },
-        Commands::Unequip(_) => {
-            miner.unequip().await;
-        },
+       #[cfg(feature = "admin")]
+        Commands::InitializeForge(_) => {
+            miner.initialize_forge().await;
+        }
+        #[cfg(feature = "admin")]
+        Commands::NewTool(_) => {
+            miner.new_tool().await;
+        }
     }
 }
 

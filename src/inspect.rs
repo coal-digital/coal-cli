@@ -43,6 +43,6 @@ fn print_tool_info(mint: Pubkey, owner: Pubkey, durability: u64, multiplier: u64
         mint,
         owner,
         amount_u64_to_f64(durability),
-        multiplier,
+        multiplier as f64 / 100.0,
     );
 }

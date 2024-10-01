@@ -96,5 +96,6 @@ impl Miner {
         );
         let res = self.rpc_client.send_and_confirm_transaction(&tx).await;
         println!("{:?}", res);
+        println!("New tool initialized: {}", mint.pubkey());
     }
 }

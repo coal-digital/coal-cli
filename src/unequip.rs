@@ -12,7 +12,7 @@ impl Miner {
 
         println!("Unequipping tool...");
 
-        let (tool_address, _bump) = Pubkey::find_program_address(&[&COAL_TOOL, signer.pubkey().as_ref()], &coal_api::id());
+        let (tool_address, _bump) = Pubkey::find_program_address(&[&COAL_MAIN_HAND_TOOL, signer.pubkey().as_ref()], &coal_api::id());
         let tool_account_info = self.rpc_client.get_account(&tool_address).await.unwrap();
 
         if tool_account_info.data.is_empty() {

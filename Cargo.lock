@@ -946,7 +946,9 @@ checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
 
 [[package]]
 name = "coal-api"
-version = "2.4.0"
+version = "2.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0363140a02d1631e5dd769ccb901cdeac2d55e492043719ebf9d2398be11c985"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -1007,7 +1009,9 @@ dependencies = [
 
 [[package]]
 name = "coal-utils"
-version = "2.4.0"
+version = "2.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8ed33bb3df829601c3b0b07b7d295e79d9202f01b9d82c1c9fd623966c7383a1"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -1682,7 +1686,9 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge-api"
-version = "2.4.0"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b6cb9e6a775ef01c219196cf936e94a1d9d3e97c08bc9816308379e7aacd530d"
 dependencies = [
  "array-const-fn-init",
  "borsh 1.5.1",
@@ -1702,7 +1708,9 @@ dependencies = [
 
 [[package]]
 name = "forge-utils"
-version = "2.4.0"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "376640bb624c9e1b6bbde92fbcdaf09466b2a657eb774cdda5c9db61300028bf"
 dependencies = [
  "bytemuck",
  "solana-program",

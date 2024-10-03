@@ -4,7 +4,7 @@ use drillx::{
     equix::{self},
     Hash, Solution,
 };
-use coal_api::{consts::*, state::Bus};
+use coal_api::{consts::*, state::{Bus, Tool}};
 use coal_utils::AccountDeserialize;
 use rand::Rng;
 use solana_program::{pubkey::Pubkey, instruction::Instruction};
@@ -21,7 +21,9 @@ use crate::{
         amount_u64_to_string,
         get_clock, get_config,
         get_updated_proof_with_authority, 
-        proof_pubkey, get_resource_from_str, get_resource_name, get_resource_bus_addresses,
+        proof_pubkey, get_resource_from_str, get_resource_name, 
+        get_resource_bus_addresses, get_tool_pubkey, get_config_pubkey, 
+        deserialize_config, deserialize_tool,
     },
     Miner,
 };
@@ -69,7 +71,23 @@ impl Miner {
         
         loop {
             // Fetch coal_proof
-            let config = get_config(&self.rpc_client, &resource).await;
+            let config_address = get_config_pubkey(&resource);
+            let tool_address = get_tool_pubkey(signer.pubkey());
+            
+            let accounts = match resource {
+                Resource::Coal => self.rpc_client.get_multiple_accounts(&[config_address, tool_address]).await.unwrap(),
+                _ => self.rpc_client.get_multiple_accounts(&[config_address]).await.unwrap(),
+            };
+            
+            let config = deserialize_config(&accounts[0].as_ref().unwrap().data, &resource);
+            
+
+            let mut tool: Option<Tool> = None;
+            
+            if accounts.len() > 1 && accounts[1].as_ref().is_some() {
+                tool = Some(deserialize_tool(&accounts[1].as_ref().unwrap().data));
+            }
+
             let proof = get_updated_proof_with_authority(&self.rpc_client, &resource, signer.pubkey(), last_hash_at).await;
 
             let top_balance = config.top_balance();
@@ -88,7 +106,7 @@ impl Miner {
                 } else {
                     "".to_string()
                 },
-                calculate_multiplier(proof.balance(), top_balance)
+                calculate_multiplier(proof.balance(), top_balance, tool)
             );
             
 
@@ -201,11 +219,23 @@ impl Miner {
         let mut last_ore_hash_at = 0;
         let mut last_ore_balance = 0;
         loop {
+            let coal_config_address = get_config_pubkey(&Resource::Coal);
+            let ore_config_address = get_config_pubkey(&Resource::Ore);
+            let tool_address = get_tool_pubkey(signer.pubkey());
+
+            let accounts = self.rpc_client.get_multiple_accounts(&[coal_config_address, ore_config_address, tool_address]).await.unwrap();
+
+            let coal_config = deserialize_config(&accounts[0].as_ref().unwrap().data, &Resource::Coal);
+            let ore_config = deserialize_config(&accounts[1].as_ref().unwrap().data, &Resource::Ore);
+            let tool: Option<Tool> = if accounts[2].as_ref().is_some() {
+                Some(deserialize_tool(&accounts[2].as_ref().unwrap().data))
+            } else {
+                None
+            };
+            
             // Fetch coal_proof
-            let (coal_config, ore_config, coal_proof, ore_proof) = tokio::join!(
+            let (coal_proof, ore_proof) = tokio::join!(
                 // TODO: reduce the number of requests!
-                get_config(&self.rpc_client, &Resource::Coal),
-                get_config(&self.rpc_client, &Resource::Ore),
                 get_updated_proof_with_authority(&self.rpc_client, &Resource::Coal, signer.pubkey(), last_coal_hash_at),
                 get_updated_proof_with_authority(&self.rpc_client, &Resource::Ore, signer.pubkey(), last_ore_hash_at)
             );
@@ -226,7 +256,7 @@ impl Miner {
                 } else {
                     "".to_string()
                 },
-                calculate_multiplier(coal_proof.balance(), coal_top_balance)
+                calculate_multiplier(coal_proof.balance(), coal_top_balance, tool)
             );
             println!(
                 "Stake: {} ORE\n{}  Multiplier: {:12}x",
@@ -239,7 +269,7 @@ impl Miner {
                 } else {
                     "".to_string()
                 },
-                calculate_multiplier(ore_proof.balance(), ore_top_balance)
+                calculate_multiplier(ore_proof.balance(), ore_top_balance, None)
             );
             
 
@@ -471,8 +501,19 @@ impl Miner {
     }
 }
 
-fn calculate_multiplier(balance: u64, top_balance: u64) -> f64 {
-    1.0 + (balance as f64 / top_balance as f64).min(1.0f64)
+fn calculate_multiplier(balance: u64, top_balance: u64, tool: Option<Tool>) -> f64 {
+   let base_multiplier = 1.0 + (balance as f64 / top_balance as f64).min(1.0f64);
+
+    match tool {
+        Some(tool) => {
+            if tool.durability.gt(&0) {
+                let tool_multiplier = 1.0 + (tool.multiplier as f64 / 100.0);
+                return base_multiplier * tool_multiplier;
+            }
+            return base_multiplier;
+        }
+        None => base_multiplier,
+    }
 }
 
 fn format_duration(seconds: u32) -> String {

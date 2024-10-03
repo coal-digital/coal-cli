@@ -3,7 +3,7 @@ use std::{io::Read, time::Duration};
 use cached::proc_macro::cached;
 use coal_api::{
     consts::*,
-    state::{Config, WoodConfig, Proof, ProofV2, Treasury},
+    state::{Config, WoodConfig, Proof, ProofV2, Treasury, Tool},
 };
 use serde::Deserialize;
 use coal_utils::AccountDeserialize;
@@ -142,19 +142,16 @@ pub async fn _get_treasury(client: &RpcClient) -> Treasury {
     *Treasury::try_from_bytes(&data).expect("Failed to parse treasury account")
 }
 
-pub async fn get_config(client: &RpcClient, resource: &Resource) -> ConfigType {
-    let config_address = match resource {
-        Resource::Coal => &coal_api::consts::COAL_CONFIG_ADDRESS,
-        Resource::Wood => &coal_api::consts::WOOD_CONFIG_ADDRESS,
-        Resource::Ingots => &smelter_api::consts::CONFIG_ADDRESS,
-        Resource::Ore => &ore_api::consts::CONFIG_ADDRESS,
-    };
+pub fn get_config_pubkey(resource: &Resource) -> Pubkey {
+    match resource {
+        Resource::Coal => coal_api::consts::COAL_CONFIG_ADDRESS,
+        Resource::Wood => coal_api::consts::WOOD_CONFIG_ADDRESS,
+        Resource::Ingots => smelter_api::consts::CONFIG_ADDRESS,
+        Resource::Ore => ore_api::consts::CONFIG_ADDRESS,
+    }
+}
 
-    let data = client
-        .get_account_data( config_address)
-        .await
-        .expect("Failed to get config account");
-
+pub fn deserialize_config(data: &[u8], resource: &Resource) -> ConfigType {
     match resource {
         Resource::Wood => ConfigType::Wood(
             *WoodConfig::try_from_bytes(&data).expect("Failed to parse wood config account")
@@ -163,6 +160,21 @@ pub async fn get_config(client: &RpcClient, resource: &Resource) -> ConfigType {
             *Config::try_from_bytes(&data).expect("Failed to parse config account")
         ),
     }
+}
+
+pub fn deserialize_tool(data: &[u8]) -> Tool {
+    *Tool::try_from_bytes(&data).expect("Failed to parse tool account")
+}
+
+pub async fn get_config(client: &RpcClient, resource: &Resource) -> ConfigType {
+    let config_address = get_config_pubkey(resource);
+
+    let data = client
+        .get_account_data( &config_address)
+        .await
+        .expect("Failed to get config account");
+
+    deserialize_config(&data, resource)
 }
 
 pub async fn get_proof_with_authority(client: &RpcClient, authority: Pubkey, resource: &Resource) -> ProofType {

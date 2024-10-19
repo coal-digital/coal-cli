@@ -213,6 +213,8 @@ pub struct RewardsArgs {
     pub resource: Option<String>,
 }
 
+#[derive(Parser, Debug)]
+pub struct ReprocessArgs {}
 
 #[derive(Parser, Debug)]
 pub struct SmeltArgs {

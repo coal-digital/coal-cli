@@ -87,13 +87,14 @@ impl Miner {
             Resource::Wood => {
                 ixs.push(coal_api::instruction::claim_wood(pubkey, beneficiary, amount));
             },
+            _ => panic!("No claim instruction for resource"),
         }
         self.send_and_confirm(&ixs, ComputeBudget::Fixed(CU_LIMIT_CLAIM), false)
             .await
             .ok();
     }
 
-    async fn initialize_ata(&self, wallet: Pubkey, resource: Resource) -> Pubkey {
+    pub async fn initialize_ata(&self, wallet: Pubkey, resource: Resource) -> Pubkey {
         // Initialize client.
         let signer = self.signer();
         let client = self.rpc_client.clone();

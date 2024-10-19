@@ -47,7 +47,8 @@ impl Miner {
             Resource::Coal => coal_api::instruction::stake_coal(signer.pubkey(), sender, amount),
             Resource::Wood => coal_api::instruction::stake_wood(signer.pubkey(), sender, amount),
             Resource::Ingots => smelter_api::instruction::stake(signer.pubkey(), sender, amount),
-            Resource::Ore => stake(signer.pubkey(), sender, amount),
+            Resource::Ore => ore_api::instruction::stake(signer.pubkey(), sender, amount),
+            _ => panic!("No staking for resource")
         };
         self.send_and_confirm(&[ix], ComputeBudget::Fixed(CU_LIMIT_CLAIM), false)
             .await

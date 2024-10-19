@@ -5,7 +5,7 @@ use solana_sdk::signature::Signer;
 
 use crate::{
     args::BalanceArgs,
-    utils::{amount_u64_to_string, get_proof_with_authority, get_resource_name, get_resource_from_str, get_resource_mint},
+    utils::{amount_u64_to_string, get_proof_with_authority, get_resource_name, get_resource_from_str, get_resource_mint, Resource},
     Miner,
 };
 
@@ -23,11 +23,19 @@ impl Miner {
             signer.pubkey()
         };
         let resource = get_resource_from_str(&args.resource);
-        let proof = get_proof_with_authority(&self.rpc_client, address, &resource).await;
+
+        let proof = match resource {
+            Resource::Chromium => None,
+            _ => {
+                let proof = get_proof_with_authority(&self.rpc_client, address, &resource).await;
+                Some(proof)
+            }
+        };
+
         let token_mint: Pubkey = get_resource_mint(&resource);
         let token_account_address = spl_associated_token_account::get_associated_token_address(
             &address,
-            &token_mint,
+        &token_mint,
         );
         let token_balance = if let Ok(Some(token_account)) = self
             .rpc_client
@@ -38,13 +46,22 @@ impl Miner {
         } else {
             "0".to_string()
         };
+        
         let resource_name = get_resource_name(&resource);
-        println!(
-            "Balance: {} {}\nStake: {} {}",
-            token_balance,
-            resource_name,
-            amount_u64_to_string(proof.balance()),
-            resource_name,
-        )
+
+        match proof {
+            Some(proof) => {
+                println!(
+                    "Balance: {} {}\nStake: {} {}",
+                    token_balance,
+                    resource_name,
+                    amount_u64_to_string(proof.balance()),
+                    resource_name,
+                )
+            }
+            None => {
+                println!("Balance: {} {}", token_balance, resource_name);
+            }
+        }
     }
 }

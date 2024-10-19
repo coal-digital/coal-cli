@@ -6,53 +6,67 @@ use solana_sdk::{signature::{Keypair, Signer}, transaction::Transaction};
 use crate::Miner;
 
 impl Miner {
-    pub async fn initialize(&self) {
-        // Return early if program is already initialized
-        if self.rpc_client.get_account(&TREASURY_ADDRESS).await.is_ok() {
-            return;
-        }
+    // pub async fn initialize(&self) {
+    //     // Return early if program is already initialized
+    //     if self.rpc_client.get_account(&TREASURY_ADDRESS).await.is_ok() {
+    //         return;
+    //     }
 
+    //     // Submit initialize tx
+    //     let blockhash = self.rpc_client.get_latest_blockhash().await.unwrap();
+    //     let ix = coal_api::instruction::init_coal(self.signer().pubkey());
+    //     let tx = Transaction::new_signed_with_payer(
+    //         &[ix],
+    //         Some(&self.signer().pubkey()),
+    //         &[&self.signer()],
+    //         blockhash,
+    //     );
+    //     let res = self.rpc_client.send_and_confirm_transaction(&tx).await;
+    //     println!("{:?}", res);
+    // }
+
+    // pub async fn initialize_smelter(&self) {
+    //     // Return early if program is already initialized
+    //     if self.rpc_client.get_account(&SMELTER_TREASURY_ADDRESS).await.is_ok() {
+    //         return;
+    //     }
+
+    //     // Submit initialize tx
+    //     let blockhash = self.rpc_client.get_latest_blockhash().await.unwrap();
+    //     let ix = smelter_api::instruction::initialize(self.signer().pubkey());
+    //     let tx = Transaction::new_signed_with_payer(
+    //         &[ix],
+    //         Some(&self.signer().pubkey()),
+    //         &[&self.signer()],
+    //         blockhash,
+    //     );
+    //     let res = self.rpc_client.send_and_confirm_transaction(&tx).await;
+    //     println!("{:?}", res);
+    // }
+
+    // pub async fn initialize_wood(&self) {
+    //     // Return early if program is already initialized
+    //     if self.rpc_client.get_account(&WOOD_CONFIG_ADDRESS).await.is_ok() {
+    //         return;
+    //     }
+
+    //     // Submit initialize tx
+    //     let blockhash = self.rpc_client.get_latest_blockhash().await.unwrap();
+    //     let ix = coal_api::instruction::init_wood(self.signer().pubkey());
+    //     let tx = Transaction::new_signed_with_payer(
+    //         &[ix],
+    //         Some(&self.signer().pubkey()),
+    //         &[&self.signer()],
+    //         blockhash,
+    //     );
+    //     let res = self.rpc_client.send_and_confirm_transaction(&tx).await;
+    //     println!("{:?}", res);
+    // }
+
+    pub async fn initialize_chromium(&self) {
         // Submit initialize tx
         let blockhash = self.rpc_client.get_latest_blockhash().await.unwrap();
-        let ix = coal_api::instruction::init_coal(self.signer().pubkey());
-        let tx = Transaction::new_signed_with_payer(
-            &[ix],
-            Some(&self.signer().pubkey()),
-            &[&self.signer()],
-            blockhash,
-        );
-        let res = self.rpc_client.send_and_confirm_transaction(&tx).await;
-        println!("{:?}", res);
-    }
-
-    pub async fn initialize_smelter(&self) {
-        // Return early if program is already initialized
-        if self.rpc_client.get_account(&SMELTER_TREASURY_ADDRESS).await.is_ok() {
-            return;
-        }
-
-        // Submit initialize tx
-        let blockhash = self.rpc_client.get_latest_blockhash().await.unwrap();
-        let ix = smelter_api::instruction::initialize(self.signer().pubkey());
-        let tx = Transaction::new_signed_with_payer(
-            &[ix],
-            Some(&self.signer().pubkey()),
-            &[&self.signer()],
-            blockhash,
-        );
-        let res = self.rpc_client.send_and_confirm_transaction(&tx).await;
-        println!("{:?}", res);
-    }
-
-    pub async fn initialize_wood(&self) {
-        // Return early if program is already initialized
-        if self.rpc_client.get_account(&WOOD_CONFIG_ADDRESS).await.is_ok() {
-            return;
-        }
-
-        // Submit initialize tx
-        let blockhash = self.rpc_client.get_latest_blockhash().await.unwrap();
-        let ix = coal_api::instruction::init_wood(self.signer().pubkey());
+        let ix = coal_api::instruction::init_chromium(self.signer().pubkey());
         let tx = Transaction::new_signed_with_payer(
             &[ix],
             Some(&self.signer().pubkey()),

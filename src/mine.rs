@@ -529,5 +529,6 @@ fn get_action_name(resource: &Resource) -> String {
         Resource::Ore => "Mining".to_string(),
         Resource::Ingots => "Smelting".to_string(),
         Resource::Wood => "Chopping".to_string(),
+        Resource::Chromium => "Reprocessing".to_string(),
     }
 }

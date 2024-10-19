@@ -28,6 +28,7 @@ impl Miner {
             Resource::Wood => coal_api::instruction::open_wood(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()),
             Resource::Ore => ore_api::instruction::open(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()),
             Resource::Ingots => smelter_api::instruction::open(signer.pubkey(), signer.pubkey(), fee_payer.pubkey()),
+            _ => panic!("Resource not supported")
         };
         
         self.send_and_confirm(&[ix], ComputeBudget::Fixed(400_000), false)

@@ -25,6 +25,7 @@ pub enum Resource {
     Ore,
     Ingots,
     Wood,
+    Chromium,
 }
 
 pub enum ConfigType {
@@ -148,6 +149,7 @@ pub fn get_config_pubkey(resource: &Resource) -> Pubkey {
         Resource::Wood => coal_api::consts::WOOD_CONFIG_ADDRESS,
         Resource::Ingots => smelter_api::consts::CONFIG_ADDRESS,
         Resource::Ore => ore_api::consts::CONFIG_ADDRESS,
+        Resource::Chromium => panic!("No config for resource"),
     }
 }
 
@@ -276,6 +278,7 @@ pub fn get_resource_from_str(resource: &Option<String>) -> Resource {
             "ingot" => Resource::Ingots,
             "coal" => Resource::Coal,
             "wood" => Resource::Wood,
+            "chromium" => Resource::Chromium,
             _ => {
                 println!("Error: Invalid resource type specified.");
                 std::process::exit(1);
@@ -291,6 +294,7 @@ pub fn get_resource_name(resource: &Resource) -> String {
         Resource::Wood => "WOOD".to_string(),
         Resource::Ingots => "INGOTS".to_string(),
         Resource::Ore => "ORE".to_string(),
+        Resource::Chromium => "CHROMIUM".to_string(),
     }
 }
 
@@ -300,6 +304,7 @@ pub fn get_resource_mint(resource: &Resource) -> Pubkey {
         Resource::Wood => coal_api::consts::WOOD_MINT_ADDRESS,
         Resource::Ingots => smelter_api::consts::MINT_ADDRESS,
         Resource::Ore => ore_api::consts::MINT_ADDRESS,
+        Resource::Chromium => coal_api::consts::CHROMIUM_MINT_ADDRESS,
     }
 }
 
@@ -309,6 +314,7 @@ pub fn get_resource_bus_addresses(resource: &Resource) -> [Pubkey; BUS_COUNT] {
         Resource::Wood => WOOD_BUS_ADDRESSES,
         Resource::Ore => ORE_BUS_ADDRESSES,
         Resource::Ingots => SMELTER_BUS_ADDRESSES,
+        Resource::Chromium => panic!("No bus addresses for resource"),
     }
 }
 
@@ -323,6 +329,7 @@ pub fn proof_pubkey(authority: Pubkey, resource: Resource) -> Pubkey {
         Resource::Wood => &coal_api::ID,
         Resource::Ore => &ore_api::ID,
         Resource::Ingots => &smelter_api::ID,
+        _ => panic!("No program id for resource"),
     };
 
     let seed = match resource {
@@ -330,6 +337,7 @@ pub fn proof_pubkey(authority: Pubkey, resource: Resource) -> Pubkey {
         Resource::Wood => coal_api::consts::WOOD_PROOF,
         Resource::Ore => ore_api::consts::PROOF,
         Resource::Ingots => smelter_api::consts::PROOF,
+        _ => panic!("No seed for resource"),
     };
     Pubkey::find_program_address(&[seed, authority.as_ref()], program_id).0
 }

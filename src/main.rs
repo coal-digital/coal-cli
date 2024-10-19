@@ -21,6 +21,7 @@ mod transfer;
 mod utils;
 mod smelt;
 mod replant;
+mod reprocess;
 mod equip;
 mod unequip;
 mod inspect;
@@ -94,17 +95,24 @@ enum Commands {
     #[command(about = "Send COAL to anyone, anywhere in the world.")]
     Transfer(TransferArgs),
 
-    #[cfg(feature = "admin")]
-    #[command(about = "Initialize coal")]
-    Initialize(InitializeArgs),
+    #[command(about = "Reprocess")]
+    Reprocess(ReprocessArgs),
+
+    // #[cfg(feature = "admin")]
+    // #[command(about = "Initialize coal")]
+    // Initialize(InitializeArgs),
+
+    // #[cfg(feature = "admin")]
+    // #[command(about = "Initialize wood")]
+    // InitializeWood(InitializeArgs),
 
     #[cfg(feature = "admin")]
-    #[command(about = "Initialize wood")]
-    InitializeWood(InitializeArgs),
+    #[command(about = "Initialize chromium")]
+    InitializeChromium(InitializeArgs),
 
-    #[cfg(feature = "admin")]
-    #[command(about = "Initialize the smelter program")]
-    InitializeSmelter(InitializeArgs),
+    // #[cfg(feature = "admin")]
+    // #[command(about = "Initialize the smelter program")]
+    // InitializeSmelter(InitializeArgs),
 
     #[cfg(feature = "admin")]
     #[command(about = "Initialize the forge")]
@@ -217,7 +225,7 @@ async fn main() {
     let cluster = args.rpc.unwrap_or(cli_config.json_rpc_url);
     let default_keypair = args.keypair.unwrap_or(cli_config.keypair_path.clone());
     let fee_payer_filepath = args.fee_payer.unwrap_or(default_keypair.clone());
-    let rpc_client = RpcClient::new_with_commitment(cluster, CommitmentConfig::confirmed());
+    let rpc_client = RpcClient::new_with_commitment(cluster, CommitmentConfig::processed());
     let jito_client =
         RpcClient::new("https://mainnet.block-engine.jito.wtf/api/v1/transactions".to_string());
 
@@ -311,18 +319,25 @@ async fn main() {
         Commands::Inspect(args) => {
             miner.inspect(args).await;
         }
-        #[cfg(feature = "admin")]
-        Commands::Initialize(_) => {
-            miner.initialize().await;
+        Commands::Reprocess(args) => {
+            miner.reprocess(args).await;
         }
+        // #[cfg(feature = "admin")]
+        // Commands::Initialize(_) => {
+        //     miner.initialize().await;
+        // }
+        // #[cfg(feature = "admin")]
+        // Commands::InitializeWood(_) => {
+        //     miner.initialize_wood().await;
+        // }
         #[cfg(feature = "admin")]
-        Commands::InitializeWood(_) => {
-            miner.initialize_wood().await;
+        Commands::InitializeChromium(_) => {
+            miner.initialize_chromium().await;
         }
-        #[cfg(feature = "admin")]
-        Commands::InitializeSmelter(_) => {
-            miner.initialize_smelter().await;
-        }
+        // #[cfg(feature = "admin")]
+        // Commands::InitializeSmelter(_) => {
+        //     miner.initialize_smelter().await;
+        // }
        #[cfg(feature = "admin")]
         Commands::InitializeForge(_) => {
             miner.initialize_forge().await;

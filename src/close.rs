@@ -45,6 +45,7 @@ impl Miner {
             Resource::Wood => coal_api::instruction::close_wood(signer.pubkey()),
             Resource::Ore => ore_api::instruction::close(signer.pubkey()),
             Resource::Ingots => smelter_api::instruction::close(signer.pubkey()),
+            _ => panic!("No close instruction for resource"),
         };
         self.send_and_confirm(&[ix], ComputeBudget::Fixed(500_000), false)
             .await

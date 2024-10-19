@@ -299,14 +299,14 @@ async fn main() {
         Commands::Transfer(args) => {
             miner.transfer(args).await;
         }
-        Commands::Craft(_) => {
-            miner.craft().await;
+        Commands::Craft(args) => {
+            miner.craft(args).await;
         }
         Commands::Equip(args) => {
             miner.equip(args).await;
         }
-        Commands::Unequip(_) => {
-            miner.unequip().await;
+        Commands::Unequip(args) => {
+            miner.unequip(args).await;
         }
         Commands::Inspect(args) => {
             miner.inspect(args).await;

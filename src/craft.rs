@@ -2,14 +2,15 @@ use forge_api;
 use coal_api::consts::FORGE_PICKAXE_COLLECTION;
 use solana_sdk::{signature::{Keypair, Signer}, transaction::Transaction};
 
-use crate::{Miner, utils::ask_confirm, args::EquipArgs};
+use crate::{Miner, utils::ask_confirm, args::{EquipArgs, CraftArgs}};
 
 impl Miner {
-    pub async fn craft(&self) {
+    pub async fn craft(&self, args: CraftArgs) {
         let blockhash = self.rpc_client.get_latest_blockhash().await.unwrap();
         let mint: Keypair = Keypair::new();
 
-        let ix = forge_api::instruction::mint(self.signer().pubkey(), FORGE_PICKAXE_COLLECTION, mint.pubkey());
+        let resource = args.resource.unwrap_or("coal".to_string());
+        let ix = forge_api::instruction::mint(self.signer().pubkey(), FORGE_PICKAXE_COLLECTION, mint.pubkey(), resource);
         let tx = Transaction::new_signed_with_payer(
             &[ix],
             Some(&self.signer().pubkey()),

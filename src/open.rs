@@ -1,5 +1,8 @@
 
 use solana_sdk::{instruction::Instruction, signature::Signer};
+use coal_api;
+use ore_api;
+use smelter_api;
 
 use crate::{
     send_and_confirm::ComputeBudget,

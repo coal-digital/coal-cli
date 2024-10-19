@@ -90,7 +90,14 @@ pub struct InitializeArgs {}
 pub struct NewToolArgs {}
 
 #[derive(Parser, Debug)]
-pub struct CraftArgs {}
+pub struct CraftArgs {
+    #[arg(
+        long,
+        value_name = "RESOURCE",
+        help = "The tool to craft."
+    )]
+    pub resource: Option<String>,
+}
 
 #[derive(Parser, Debug)]
 pub struct EquipArgs {
@@ -103,7 +110,14 @@ pub struct EquipArgs {
 }
 
 #[derive(Parser, Debug)]
-pub struct UnequipArgs {}
+pub struct UnequipArgs {
+    #[arg(
+        long,
+        value_name = "RESOURCE",
+        help = "The tool to unequip."
+    )]
+    pub resource: Option<String>,
+}
 
 #[derive(Parser, Debug)]
 pub struct InspectArgs {

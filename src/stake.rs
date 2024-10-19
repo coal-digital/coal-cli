@@ -2,6 +2,9 @@ use std::str::FromStr;
 
 use solana_program::pubkey::Pubkey;
 use solana_sdk::signature::Signer;
+use coal_api;
+use ore_api::instruction::stake;
+use smelter_api;
 
 use crate::{
     args::StakeArgs, cu_limits::CU_LIMIT_CLAIM, send_and_confirm::ComputeBudget,
@@ -44,7 +47,7 @@ impl Miner {
             Resource::Coal => coal_api::instruction::stake_coal(signer.pubkey(), sender, amount),
             Resource::Wood => coal_api::instruction::stake_wood(signer.pubkey(), sender, amount),
             Resource::Ingots => smelter_api::instruction::stake(signer.pubkey(), sender, amount),
-            Resource::Ore => ore_api::instruction::stake(signer.pubkey(), sender, amount),
+            Resource::Ore => stake(signer.pubkey(), sender, amount),
         };
         self.send_and_confirm(&[ix], ComputeBudget::Fixed(CU_LIMIT_CLAIM), false)
             .await

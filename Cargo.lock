@@ -946,9 +946,9 @@ checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
 
 [[package]]
 name = "coal-api"
-version = "2.5.3"
+version = "2.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33a1fcdff20eadf5e561244b5f27f64cfb4bf2ad469e03220ae72e6102fbbbe4"
+checksum = "997aed600aa1ab7bc645fabb294706f401d9b2c663b2163faa603c36027b7ffc"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",

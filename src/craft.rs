@@ -1,3 +1,5 @@
+use colored::*;
+
 use forge_api;
 use coal_api::consts::FORGE_PICKAXE_COLLECTION;
 use solana_sdk::{signature::{Keypair, Signer}, transaction::Transaction};
@@ -10,7 +12,7 @@ impl Miner {
         let mint: Keypair = Keypair::new();
 
         let resource = args.resource.unwrap_or("coal".to_string());
-        let ix = forge_api::instruction::mint(self.signer().pubkey(), FORGE_PICKAXE_COLLECTION, mint.pubkey(), resource);
+        let ix = forge_api::instruction::mint(self.signer().pubkey(), FORGE_PICKAXE_COLLECTION, mint.pubkey(), resource.clone());
         let tx = Transaction::new_signed_with_payer(
             &[ix],
             Some(&self.signer().pubkey()),
@@ -26,7 +28,11 @@ impl Miner {
             println!("{:?}", res);
         }
 
-        println!("Pickaxe crafted!");
+        match resource.as_str() {
+            "coal" => println!("{}", "Miner's Pickaxe crafted!".bold().green()),
+            "wood" => println!("{}", "Woodcutter's Axe crafted!".bold().green()),
+            _ => {},
+        }
 
         if !ask_confirm(
             format!(

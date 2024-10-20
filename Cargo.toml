@@ -1,6 +1,6 @@
 [package]
 name = "coal-cli"
-version = "2.7.2"
+version = "2.7.3"
 edition = "2021"
 license = "Apache-2.0"
 description = "A command line interface for COAL cryptocurrency mining."
@@ -31,12 +31,12 @@ futures = "0.3.30"
 indicatif = "0.17.8"
 num_cpus = "1.16.0"
 mpl-core = "0.8.0"
-# coal-api = "2.5.2"
-# coal-utils = "2.5.2"
+coal-api = "2.5.3"
+coal-utils = "2.5.2"
 smelter-api = "1.0.1"
 smelter-utils = "1.0.1"
-# forge-api = "1.0.2"
-# forge-utils = "1.0.2"
+forge-api = "1.0.3"
+forge-utils = "1.0.2"
 ore-api = "=2.1.9"
 ore-utils = "=2.1.9"
 rand = "0.8.4"
@@ -59,12 +59,12 @@ serde = { version = "1.0", features = ["derive"] }
 
 # [patch.crates-io]
 # drillx = { path = "../drillx/drillx" }
-coal-api = { path = "../coal/api" }
-coal-utils = { path = "../coal/utils" }
+# coal-api = { path = "../coal/api" }
+# coal-utils = { path = "../coal/utils" }
 # ore-api = { path = "../ore/api" }
 # ore-utils = { path = "../ore/utils" }
 # smelter-api = { path = "../smelter/api" }
 # smelter-utils = { path = "../smelter/utils" }
-forge-api = { path = "../forge/api" }
-forge-utils = { path = "../forge/utils" }
+# forge-api = { path = "../forge/api" }
+# forge-utils = { path = "../forge/utils" }
 

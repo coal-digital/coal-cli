@@ -4,7 +4,7 @@ use drillx::{
     equix::{self},
     Hash, Solution,
 };
-use coal_api::{consts::*, state::{Bus, Tool}};
+use coal_api::{consts::*, state::Bus};
 use coal_utils::AccountDeserialize;
 use ore_api;
 use rand::Rng;

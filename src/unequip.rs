@@ -1,8 +1,7 @@
 use colored::*;
 use solana_sdk::{signature::Signer, transaction::Transaction, pubkey::Pubkey};
 use mpl_core::{Asset, types::UpdateAuthority};
-use coal_api::{consts::*, state::Tool};
-use coal_utils::AccountDeserialize;
+use coal_api::consts::*;
 
 use crate::{Miner, utils::{get_resource_from_str, Resource, deserialize_tool}, args::UnequipArgs};
 

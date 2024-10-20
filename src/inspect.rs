@@ -1,7 +1,5 @@
 use std::str::FromStr;
 
-use coal_api::state::Tool;
-use coal_utils::AccountDeserialize;
 use mpl_core::Asset;
 use solana_program::pubkey::Pubkey;
 use solana_sdk::signer::Signer;
@@ -9,19 +7,20 @@ use solana_sdk::signer::Signer;
 use crate::{
     Miner,
     args::InspectArgs,
-    utils::{get_tool_pubkey, amount_u64_to_f64},
+    utils::{get_tool_pubkey, amount_u64_to_f64, get_resource_from_str, deserialize_tool},
 };
 
 impl Miner {
     pub async fn inspect(&self, args: InspectArgs) {
         let signer = self.signer();
+        let resource = get_resource_from_str(&args.resource);
         
         if args.tool.is_none() {
-            let tool_address = get_tool_pubkey(signer.pubkey());
+            let tool_address = get_tool_pubkey(signer.pubkey(), &resource);
             let tool_data = self.rpc_client.get_account_data(&tool_address).await.unwrap();
-            let tool = Tool::try_from_bytes(&tool_data).unwrap();
+            let tool = deserialize_tool(&tool_data, &resource);
 
-            print_tool_info(tool.asset, tool.authority, amount_u64_to_f64(tool.durability), tool.multiplier);
+            print_tool_info(tool.asset(), tool.authority(), amount_u64_to_f64(tool.durability()), tool.multiplier());
         } else if let Some(tool) = args.tool {
             let asset_address = Pubkey::from_str(&tool).unwrap();
             let asset_data = self.rpc_client.get_account_data(&asset_address).await.unwrap();

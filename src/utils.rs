@@ -3,7 +3,7 @@ use std::{io::Read, time::Duration};
 use cached::proc_macro::cached;
 use coal_api::{
     consts::*,
-    state::{Config, WoodConfig, Proof, ProofV2, Treasury, Tool},
+    state::{Config, WoodConfig, Proof, ProofV2, Treasury, Tool, WoodTool},
 };
 use serde::Deserialize;
 use coal_utils::AccountDeserialize;
@@ -135,6 +135,41 @@ impl ProofType {
 
 }
 
+pub enum ToolType {
+    Tool(Tool),
+    WoodTool(WoodTool),
+}
+
+impl ToolType {
+    pub fn authority(&self) -> Pubkey {
+        match self {
+            ToolType::Tool(tool) => tool.authority,
+            ToolType::WoodTool(tool) => tool.authority,
+        }
+    }
+
+    pub fn asset(&self) -> Pubkey {
+        match self {
+            ToolType::Tool(tool) => tool.asset,
+            ToolType::WoodTool(tool) => tool.asset,
+        }
+    }
+
+    pub fn durability(&self) -> u64 {
+        match self {
+            ToolType::Tool(tool) => tool.durability,
+            ToolType::WoodTool(tool) => tool.durability,
+        }
+    }
+
+    pub fn multiplier(&self) -> u64 {
+        match self {
+            ToolType::Tool(tool) => tool.multiplier,
+            ToolType::WoodTool(tool) => tool.multiplier,
+        }
+    }
+} 
+
 pub async fn _get_treasury(client: &RpcClient) -> Treasury {
     let data = client
         .get_account_data(&TREASURY_ADDRESS)
@@ -164,8 +199,11 @@ pub fn deserialize_config(data: &[u8], resource: &Resource) -> ConfigType {
     }
 }
 
-pub fn deserialize_tool(data: &[u8]) -> Tool {
-    *Tool::try_from_bytes(&data).expect("Failed to parse tool account")
+pub fn deserialize_tool(data: &[u8], resource: &Resource) -> ToolType {
+    match resource {
+        Resource::Wood => ToolType::WoodTool(*WoodTool::try_from_bytes(&data).expect("Failed to parse tool account")),
+        _ => ToolType::Tool(*Tool::try_from_bytes(&data).expect("Failed to parse tool account")),
+    }
 }
 
 pub async fn get_config(client: &RpcClient, resource: &Resource) -> ConfigType {
@@ -318,8 +356,11 @@ pub fn get_resource_bus_addresses(resource: &Resource) -> [Pubkey; BUS_COUNT] {
     }
 }
 
-pub fn get_tool_pubkey(authority: Pubkey) -> Pubkey {
-    Pubkey::find_program_address(&[COAL_MAIN_HAND_TOOL, authority.as_ref()], &coal_api::id()).0
+pub fn get_tool_pubkey(authority: Pubkey, resource: &Resource) -> Pubkey {
+    match resource {
+        Resource::Wood => Pubkey::find_program_address(&[WOOD_MAIN_HAND_TOOL, authority.as_ref()], &coal_api::id()).0,
+        _ => Pubkey::find_program_address(&[COAL_MAIN_HAND_TOOL, authority.as_ref()], &coal_api::id()).0,
+    }  
 }
 
 #[cached]

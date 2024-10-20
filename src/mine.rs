@@ -24,7 +24,7 @@ use crate::{
         get_updated_proof_with_authority, 
         proof_pubkey, get_resource_from_str, get_resource_name, 
         get_resource_bus_addresses, get_tool_pubkey, get_config_pubkey, 
-        deserialize_config, deserialize_tool,
+        deserialize_config, deserialize_tool, ToolType,
     },
     Miner,
 };
@@ -73,20 +73,21 @@ impl Miner {
         loop {
             // Fetch coal_proof
             let config_address = get_config_pubkey(&resource);
-            let tool_address = get_tool_pubkey(signer.pubkey());
+            let tool_address = get_tool_pubkey(signer.pubkey(), &resource);
             
             let accounts = match resource {
                 Resource::Coal => self.rpc_client.get_multiple_accounts(&[config_address, tool_address]).await.unwrap(),
+                Resource::Wood => self.rpc_client.get_multiple_accounts(&[config_address, tool_address]).await.unwrap(),
                 _ => self.rpc_client.get_multiple_accounts(&[config_address]).await.unwrap(),
             };
             
             let config = deserialize_config(&accounts[0].as_ref().unwrap().data, &resource);
             
 
-            let mut tool: Option<Tool> = None;
+            let mut tool: Option<ToolType> = None;
             
             if accounts.len() > 1 && accounts[1].as_ref().is_some() {
-                tool = Some(deserialize_tool(&accounts[1].as_ref().unwrap().data));
+                tool = Some(deserialize_tool(&accounts[1].as_ref().unwrap().data, &resource));
             }
 
             let proof = get_updated_proof_with_authority(&self.rpc_client, &resource, signer.pubkey(), last_hash_at).await;
@@ -222,14 +223,14 @@ impl Miner {
         loop {
             let coal_config_address = get_config_pubkey(&Resource::Coal);
             let ore_config_address = get_config_pubkey(&Resource::Ore);
-            let tool_address = get_tool_pubkey(signer.pubkey());
+            let tool_address = get_tool_pubkey(signer.pubkey(), &Resource::Coal);
 
             let accounts = self.rpc_client.get_multiple_accounts(&[coal_config_address, ore_config_address, tool_address]).await.unwrap();
 
             let coal_config = deserialize_config(&accounts[0].as_ref().unwrap().data, &Resource::Coal);
             let ore_config = deserialize_config(&accounts[1].as_ref().unwrap().data, &Resource::Ore);
-            let tool: Option<Tool> = if accounts[2].as_ref().is_some() {
-                Some(deserialize_tool(&accounts[2].as_ref().unwrap().data))
+            let tool: Option<ToolType> = if accounts[2].as_ref().is_some() {
+                Some(deserialize_tool(&accounts[2].as_ref().unwrap().data, &Resource::Coal))
             } else {
                 None
             };
@@ -502,13 +503,13 @@ impl Miner {
     }
 }
 
-fn calculate_multiplier(balance: u64, top_balance: u64, tool: Option<Tool>) -> f64 {
+fn calculate_multiplier(balance: u64, top_balance: u64, tool: Option<ToolType>) -> f64 {
    let base_multiplier = 1.0 + (balance as f64 / top_balance as f64).min(1.0f64);
 
     match tool {
         Some(tool) => {
-            if tool.durability.gt(&0) {
-                let tool_multiplier = 1.0 + (tool.multiplier as f64 / 100.0);
+            if tool.durability().gt(&0) {
+                let tool_multiplier = 1.0 + (tool.multiplier() as f64 / 100.0);
                 return base_multiplier * tool_multiplier;
             }
             return base_multiplier;

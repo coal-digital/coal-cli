@@ -87,6 +87,10 @@ pub struct InitializeArgs {}
 
 #[cfg(feature = "admin")]
 #[derive(Parser, Debug)]
+pub struct VerifyArgs {}
+
+#[cfg(feature = "admin")]
+#[derive(Parser, Debug)]
 pub struct NewToolArgs {}
 
 #[derive(Parser, Debug)]
@@ -127,6 +131,12 @@ pub struct InspectArgs {
         help = "The tool to inspect."
     )]
     pub tool: Option<String>,
+    #[arg(
+        long,
+        value_name = "RESOURCE",
+        help = "The resource tool account to inspect."
+    )]
+    pub resource: Option<String>,
 }
 
 #[derive(Parser, Debug)]

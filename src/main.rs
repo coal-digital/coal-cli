@@ -8,8 +8,6 @@ mod close;
 mod config;
 mod cu_limits;
 mod dynamic_fee;
-#[cfg(feature = "admin")]
-mod initialize;
 mod craft;
 mod mine;
 mod open;
@@ -25,6 +23,8 @@ mod reprocess;
 mod equip;
 mod unequip;
 mod inspect;
+#[cfg(feature = "admin")]
+mod initialize;
 
 use std::{sync::Arc, sync::RwLock};
 use futures::StreamExt;
@@ -121,6 +121,10 @@ enum Commands {
     #[cfg(feature = "admin")]
     #[command(about = "Initialize the tool")]
     NewTool(NewToolArgs),
+
+    #[cfg(feature = "admin")]
+    #[command(about = "Verify the collection authority")]
+    Verify(VerifyArgs),
 
     #[command(about = "Craft a pickaxe")]
     Craft(CraftArgs),
@@ -345,6 +349,10 @@ async fn main() {
         #[cfg(feature = "admin")]
         Commands::NewTool(_) => {
             miner.new_tool().await;
+        }
+        #[cfg(feature = "admin")]
+        Commands::Verify(_) => {
+            miner.verify().await;
         }
     }
 }

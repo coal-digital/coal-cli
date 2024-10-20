@@ -4,7 +4,7 @@ use mpl_core::{Asset, types::UpdateAuthority};
 use coal_api::{consts::*, state::Tool};
 use coal_utils::AccountDeserialize;
 
-use crate::{Miner, utils::{get_resource_from_str, Resource}, args::UnequipArgs};
+use crate::{Miner, utils::{get_resource_from_str, Resource, deserialize_tool}, args::UnequipArgs};
 
 impl Miner {
     pub async fn unequip(&self, args: UnequipArgs) {
@@ -20,7 +20,7 @@ impl Miner {
                 COAL_MAIN_HAND_TOOL
             }
             Resource::Wood => {
-                COAL_MAIN_HAND_TOOL
+                WOOD_MAIN_HAND_TOOL
             },
             _ => {
                 println!("{} {}", "ERROR".bold().red(), "Invalid resource");
@@ -36,8 +36,8 @@ impl Miner {
             return;
         }
         
-        let tool = Tool::try_from_bytes(&tool_account_info.data).unwrap();
-        let asset_data = self.rpc_client.get_account_data(&tool.asset).await.unwrap();
+        let tool = deserialize_tool(&tool_account_info.data, &resource);
+        let asset_data = self.rpc_client.get_account_data(&tool.asset()).await.unwrap();
         let asset = Asset::from_bytes(&asset_data).unwrap();
         let collection_address = match asset.base.update_authority {
             UpdateAuthority::Collection(address) => address,
@@ -50,7 +50,7 @@ impl Miner {
             signer.pubkey(), 
             signer.pubkey(), 
             fee_payer.pubkey(), 
-            tool.asset,
+            tool.asset(),
             collection_address,
             seed
         );
@@ -62,6 +62,6 @@ impl Miner {
         );
         let res = self.rpc_client.send_and_confirm_transaction(&tx).await;
         println!("{:?}", res);
-        println!("Unequipped tool: {}", tool.asset);
+        println!("Unequipped tool: {}", tool.asset());
     }
 }

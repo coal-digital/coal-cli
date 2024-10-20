@@ -946,9 +946,7 @@ checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
 
 [[package]]
 name = "coal-api"
-version = "2.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e58a72da12740a893611886dde897ce217924d8d224e566ecca1b0fa8bbf286"
+version = "2.5.2"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -1009,9 +1007,7 @@ dependencies = [
 
 [[package]]
 name = "coal-utils"
-version = "2.5.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a0aaf9b49cd62c7e21193c4018be11dc8586d538928ddae815ddf32a16909975"
+version = "2.5.2"
 dependencies = [
  "bytemuck",
  "solana-program",

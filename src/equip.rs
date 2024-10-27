@@ -55,17 +55,3 @@ impl Miner {
         println!("Tool equipped successfully!");
     }
 }
-
-// [
-//     "Program EG67mGGTxMGuPxDLWeccczVecycmpj2SokzpWeBoGVTf invoke [1]", 
-//     "Program CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d invoke [2]", 
-//     "Program log: Instruction: Transfer", 
-//     "Program log: programs/mpl-core/src/state/asset.rs:284:Approve", 
-//     "Program CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d consumed 14853 of 195525 compute units", 
-//     "Program CoREENxT6tW1HoK8ypY1SxRMZTcVPm7R94rH4PZNhX7d success", 
-//     "Program log: durability: 100", 
-//     "Program log: multiplier: 70", 
-//     "Program log: Equipping wood tool", 
-//     "Program EG67mGGTxMGuPxDLWeccczVecycmpj2SokzpWeBoGVTf consumed 40786 of 200000 compute units", 
-//     "Program EG67mGGTxMGuPxDLWeccczVecycmpj2SokzpWeBoGVTf failed: Invalid account owner"
-// ]

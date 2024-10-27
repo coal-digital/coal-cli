@@ -23,6 +23,7 @@ mod reprocess;
 mod equip;
 mod unequip;
 mod inspect;
+mod guild;
 #[cfg(feature = "admin")]
 mod initialize;
 
@@ -98,37 +99,8 @@ enum Commands {
     #[command(about = "Reprocess")]
     Reprocess(ReprocessArgs),
 
-    // #[cfg(feature = "admin")]
-    // #[command(about = "Initialize coal")]
-    // Initialize(InitializeArgs),
-
-    // #[cfg(feature = "admin")]
-    // #[command(about = "Initialize wood")]
-    // InitializeWood(InitializeArgs),
-
-    #[cfg(feature = "admin")]
-    #[command(about = "Initialize chromium")]
-    InitializeChromium(InitializeArgs),
-
-    // #[cfg(feature = "admin")]
-    // #[command(about = "Initialize the smelter program")]
-    // InitializeSmelter(InitializeArgs),
-
-    #[cfg(feature = "admin")]
-    #[command(about = "Initialize the forge")]
-    InitializeForge(InitializeArgs),
-
-    #[cfg(feature = "admin")]
-    #[command(about = "Initialize the tool")]
-    NewTool(NewToolArgs),
-
-    #[cfg(feature = "admin")]
-    #[command(about = "Verify the collection authority")]
-    Verify(VerifyArgs),
-
     #[command(about = "Craft a pickaxe")]
     Craft(CraftArgs),
-
 
     #[command(about = "Equip tool")]
     Equip(EquipArgs),
@@ -139,6 +111,41 @@ enum Commands {
     #[command(about = "Inspect tool")]
     Inspect(InspectArgs),
 
+    #[command(about = "Guild commands", subcommand)]
+    Guild(GuildCommands),
+
+    #[cfg(feature = "admin")]
+    #[command(about = "Initialize the tool")]
+    NewTool(NewToolArgs),
+
+    #[cfg(feature = "admin")]
+    #[command(about = "Verify the collection authority")]
+    Verify(VerifyArgs),
+}
+
+#[derive(Subcommand, Debug)]
+enum GuildCommands {
+    #[command(about = "Join a guild")]
+    Join(GuildJoinArgs),
+
+    #[command(about = "Invite a member to your guild")]
+    Invite(GuildInviteArgs),
+
+    #[command(about = "Create a new guild")]
+    NewGuild(NewGuildArgs),
+
+    #[command(about = "Leave your current guild")]
+    Leave(GuildLeaveArgs),
+
+    #[command(about = "Stake to your guild")]
+    Stake(GuildStakeArgs),
+
+    #[command(about = "Unstake from your guild")]
+    Unstake(GuildUnstakeArgs),
+
+    #[cfg(feature = "admin")]
+    #[command(about = "Initialize the guild program")]
+    Initialize(InitializeArgs),
 }
 
 #[derive(Parser, Debug)]
@@ -326,26 +333,30 @@ async fn main() {
         Commands::Reprocess(args) => {
             miner.reprocess(args).await;
         }
-        // #[cfg(feature = "admin")]
-        // Commands::Initialize(_) => {
-        //     miner.initialize().await;
-        // }
-        // #[cfg(feature = "admin")]
-        // Commands::InitializeWood(_) => {
-        //     miner.initialize_wood().await;
-        // }
-        #[cfg(feature = "admin")]
-        Commands::InitializeChromium(_) => {
-            miner.initialize_chromium().await;
-        }
-        // #[cfg(feature = "admin")]
-        // Commands::InitializeSmelter(_) => {
-        //     miner.initialize_smelter().await;
-        // }
-       #[cfg(feature = "admin")]
-        Commands::InitializeForge(_) => {
-            miner.initialize_forge().await;
-        }
+        Commands::Guild(guild_command) => match guild_command {
+            GuildCommands::Join(args) => {
+                miner.guild_join(args).await;
+            }
+            GuildCommands::Invite(args) => {
+                miner.guild_invite(args).await;
+            }
+            GuildCommands::NewGuild(args) => {
+                miner.new_guild(args).await;
+            }
+            GuildCommands::Leave(args) => {
+                miner.leave_guild(args).await;
+            }
+            GuildCommands::Stake(args) => {
+                miner.guild_stake(args).await;
+            }
+            GuildCommands::Unstake(args) => {
+                miner.guild_unstake(args).await;
+            }
+            #[cfg(feature = "admin")]
+            GuildCommands::Initialize(_) => {
+                miner.guild_initialize(_).await;
+            }
+        },
         #[cfg(feature = "admin")]
         Commands::NewTool(_) => {
             miner.new_tool().await;

@@ -288,3 +288,36 @@ pub struct TransferArgs {
     )]
     pub resource: Option<String>,
 }
+
+#[derive(Parser, Debug)]
+pub struct GuildJoinArgs {
+    pub guild: String,
+}
+
+#[derive(Parser, Debug)]
+pub struct GuildInviteArgs {
+    pub member: String,
+}
+
+#[derive(Parser, Debug)]
+pub struct GuildStakeArgs {
+    #[arg(
+        value_name = "AMOUNT",
+        help = "The amount of LP tokens to stake. Defaults to max."
+    )]
+    pub amount: Option<f64>,
+}
+
+#[derive(Parser, Debug)]
+pub struct GuildUnstakeArgs {
+    pub amount: Option<f64>,
+}
+
+#[derive(Parser, Debug)]
+pub struct GuildLeaveArgs {}
+
+#[derive(Parser, Debug)]
+pub struct NewGuildArgs {}
+
+#[derive(Parser, Debug)]
+pub struct NewMemberArgs {}

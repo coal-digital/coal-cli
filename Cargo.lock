@@ -950,6 +950,7 @@ version = "2.5.4"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
+ "coal-guilds-api",
  "coal-utils",
  "const-crypto",
  "drillx",
@@ -960,6 +961,7 @@ dependencies = [
  "spl-associated-token-account",
  "spl-token",
  "static_assertions",
+ "steel",
  "thiserror",
 ]
 
@@ -1009,7 +1011,7 @@ dependencies = [
 
 [[package]]
 name = "coal-guilds-api"
-version = "0.2.0"
+version = "1.0.0"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",

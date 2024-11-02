@@ -125,6 +125,9 @@ enum Commands {
 
 #[derive(Subcommand, Debug)]
 enum GuildCommands {
+    #[command(about = "Get your guild information")]
+    Get(GuildGetArgs),
+
     #[command(about = "Join a guild")]
     Join(GuildJoinArgs),
 
@@ -132,7 +135,7 @@ enum GuildCommands {
     Invite(GuildInviteArgs),
 
     #[command(about = "Create a new guild")]
-    NewGuild(NewGuildArgs),
+    New(NewGuildArgs),
 
     #[command(about = "Leave your current guild")]
     Leave(GuildLeaveArgs),
@@ -334,13 +337,16 @@ async fn main() {
             miner.reprocess(args).await;
         }
         Commands::Guild(guild_command) => match guild_command {
+            GuildCommands::Get(args) => {
+                miner.get_guild(args).await;
+            }
             GuildCommands::Join(args) => {
                 miner.guild_join(args).await;
             }
             GuildCommands::Invite(args) => {
                 miner.guild_invite(args).await;
             }
-            GuildCommands::NewGuild(args) => {
+            GuildCommands::New(args) => {
                 miner.new_guild(args).await;
             }
             GuildCommands::Leave(args) => {
@@ -354,7 +360,7 @@ async fn main() {
             }
             #[cfg(feature = "admin")]
             GuildCommands::Initialize(_) => {
-                miner.guild_initialize(_).await;
+                miner.guild_initialize().await;
             }
         },
         #[cfg(feature = "admin")]

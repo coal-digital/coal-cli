@@ -314,6 +314,11 @@ pub struct GuildUnstakeArgs {
 }
 
 #[derive(Parser, Debug)]
+pub struct GuildGetArgs {
+    pub address: Option<String>,
+}
+
+#[derive(Parser, Debug)]
 pub struct GuildLeaveArgs {}
 
 #[derive(Parser, Debug)]

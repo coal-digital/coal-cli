@@ -8,7 +8,7 @@ use crate::{
     Miner,
     GuildUnstakeArgs,
     send_and_confirm::ComputeBudget,
-    utils::amount_f64_to_u64,
+    utils::{amount_f64_to_u64, amount_u64_to_string},
 };
 
 impl Miner {
@@ -30,9 +30,10 @@ impl Miner {
             u64::from_str(lp_tokens.token_amount.amount.as_str()).expect("Failed to parse token balance")
         };
 
+        println!("Unstaking: {} LP tokens", amount_u64_to_string(amount));
         let member_data = self.rpc_client.get_account_data(&member.0).await.unwrap();
         let member = Member::try_from_bytes(&member_data).unwrap();
-        let ix = coal_guilds_api::sdk::stake(signer.pubkey(), member.guild, amount);
+        let ix = coal_guilds_api::sdk::unstake(signer.pubkey(), member.guild, amount);
         let sig = self.send_and_confirm(&[ix], ComputeBudget::Fixed(500_000), false).await.unwrap();
         println!("sig: {}", sig);
     }

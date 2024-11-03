@@ -24,7 +24,6 @@ use crate::{
     utils::{
         Resource, ConfigType,
         amount_u64_to_string,
-        amount_u64_to_f64,
         get_clock, get_config,
         get_updated_proof_with_authority, 
         proof_pubkey, get_resource_from_str, get_resource_name, 
@@ -152,9 +151,9 @@ impl Miner {
                 match guild_config {
                     Some(guild_config) => {
                         match guild {
-                            Some(guild) => calculate_stake_multiplier(guild.total_stake, guild_config.total_stake),
+                            Some(guild) => calculate_stake_multiplier(guild.total_stake, guild_config.total_stake, guild_config.total_multiplier),
                             None => if member.is_some() { 
-                                calculate_stake_multiplier(member.unwrap().total_stake, guild_config.total_stake)
+                                calculate_stake_multiplier(member.unwrap().total_stake, guild_config.total_stake, guild_config.total_multiplier)
                             } else { 
                                 0.0
                             },
@@ -610,11 +609,11 @@ fn calculate_tool_multipler(tool: &Option<ToolType>) -> f64 {
     }
 }
 
-fn calculate_stake_multiplier(stake: u64, total_stake: u64) -> f64 {
+fn calculate_stake_multiplier(stake: u64, total_stake: u64, total_multiplier: u64) -> f64 {
     if total_stake == 0 {
         return 0.0;
     }
-    (COAL_STAKE_MULTIPLIER as f64) * (stake as f64) / (total_stake as f64)
+    (total_multiplier as f64) * (stake as f64) / (total_stake as f64)
 }
 
 fn format_duration(seconds: u32) -> String {

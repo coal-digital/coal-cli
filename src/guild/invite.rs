@@ -14,10 +14,12 @@ impl Miner {
     pub async fn guild_invite(&self, args: GuildInviteArgs) {
         let signer = self.signer();
         let address = Pubkey::from_str(&args.member).unwrap();
+        let guild_address = guild_pda(signer.pubkey()).0;
+        println!("Inviting {} to guild {}", address, guild_address.to_string());
+        
         let ix = coal_guilds_api::sdk::invite(signer.pubkey(), address);
         self.send_and_confirm(&[ix], ComputeBudget::Fixed(500_000), false).await.unwrap();
-
-        let guild = guild_pda(signer.pubkey());
-        println!("Invited {} to guild {}", args.member, guild.0.to_string());
+        println!("Share the following command with the invited member:");
+        println!("coal guild join {}", guild_address.to_string());
     }
 }

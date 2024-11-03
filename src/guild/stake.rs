@@ -24,10 +24,8 @@ impl Miner {
         
         // Parse amount
         let amount: u64 = if let Some(amount) = args.amount {
-            println!("amount: {}", amount);
             amount_f64_to_u64(amount)
         } else {
-            println!("lp_tokens: {:?}", lp_tokens);
             u64::from_str(lp_tokens.token_amount.amount.as_str()).expect("Failed to parse token balance")
         };
         println!("Staking: {} LP tokens", amount_u64_to_string(amount));
@@ -52,7 +50,6 @@ impl Miner {
             }
         }
 
-        let sig = self.send_and_confirm(&ixs, ComputeBudget::Fixed(500_000), false).await.unwrap();
-        println!("sig: {}", sig);
+        self.send_and_confirm(&ixs, ComputeBudget::Fixed(500_000), false).await.ok();
     }
 }

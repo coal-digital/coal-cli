@@ -133,36 +133,57 @@ impl Miner {
             let top_balance = config.top_balance();
             let min_difficulty = config.min_difficulty();
             
-            println!(
-                "\n\nStake: {} {}\n{} COAL Multiplier: {:12}x \n Tool Multiplier: {:12}x \n Stake Multiplier: {:12}x",
-                amount_u64_to_string(proof.balance()),
-                get_resource_name(&resource),
-                if last_hash_at.gt(&0) {
-                    format!(
-                        "  Change: {} {}\n",
-                        amount_u64_to_string(proof.balance().saturating_sub(last_balance)),
-                        get_resource_name(&resource)
-                    )
-                } else {
-                    "".to_string()
-                },
-                calculate_multiplier(proof.balance(), top_balance),
-                calculate_tool_multipler(&tool),
-                match guild_config {
-                    Some(guild_config) => {
-                        match guild {
-                            Some(guild) => calculate_stake_multiplier(guild.total_stake, guild_config.total_stake, guild_config.total_multiplier),
-                            None => if member.is_some() { 
-                                calculate_stake_multiplier(member.unwrap().total_stake, guild_config.total_stake, guild_config.total_multiplier)
-                            } else { 
-                                0.0
+            match resource {
+                Resource::Coal => {
+                    println!(
+                        "\n\nStake: {} {}\n {} Stake Multiplier: {:12}x\n Tool Multiplier: {:12}x\n LP Stake Multiplier: {:12}x",
+                        amount_u64_to_string(proof.balance()),
+                        get_resource_name(&resource),
+                        if last_hash_at.gt(&0) {
+                            format!(
+                                "  Change: {} {}\n",
+                                amount_u64_to_string(proof.balance().saturating_sub(last_balance)),
+                                get_resource_name(&resource)
+                            )
+                        } else {
+                            "".to_string()
+                        },
+                        calculate_multiplier(proof.balance(), top_balance),
+                        calculate_tool_multipler(&tool),
+                        match guild_config {
+                            Some(guild_config) => {
+                                match guild {
+                                    Some(guild) => calculate_stake_multiplier(guild.total_stake, guild_config.total_stake, guild_config.total_multiplier),
+                                    None => if member.is_some() { 
+                                        calculate_stake_multiplier(member.unwrap().total_stake, guild_config.total_stake, guild_config.total_multiplier)
+                                    } else { 
+                                        0.0
+                                    },
+                                }
                             },
+                            None => 0.0,
                         }
-                    },
-                    None => 0.0,
+                    );
                 }
-            );
-            
+                _ => {
+                    println!(
+                        "\n\nStake: {} {}\n{}  Multiplier: {:12}x \n Tool Multiplier: {:12}x",
+                        amount_u64_to_string(proof.balance()),
+                        get_resource_name(&resource),
+                        if last_hash_at.gt(&0) {
+                            format!(
+                                "  Change: {} {}\n",
+                                amount_u64_to_string(proof.balance().saturating_sub(last_balance)),
+                                get_resource_name(&resource)
+                            )
+                        } else {
+                            "".to_string()
+                        },
+                        calculate_multiplier(proof.balance(), top_balance),
+                        calculate_tool_multipler(&tool),
+                    );
+                }
+            }
 
             last_hash_at = proof.last_hash_at();
             last_balance = proof.balance();
@@ -288,26 +309,59 @@ impl Miner {
         let mut last_coal_balance = 0;
         let mut last_ore_hash_at = 0;
         let mut last_ore_balance = 0;
+
+        let mut guild: Option<coal_guilds_api::state::Guild> = None;
+        let mut guild_address: Option<Pubkey> = None;
+
         loop {
             let coal_config_address = get_config_pubkey(&Resource::Coal);
             let ore_config_address = get_config_pubkey(&Resource::Ore);
             let tool_address = get_tool_pubkey(signer.pubkey(), &Resource::Coal);
-            let member_address = coal_guilds_api::state::member_pda(signer.pubkey()).0;
+            let guild_config_address = coal_guilds_api::state::config_pda().0;
+            let guild_member_address = coal_guilds_api::state::member_pda(signer.pubkey()).0;
 
-            let accounts = self.rpc_client.get_multiple_accounts(&[coal_config_address, ore_config_address, tool_address, member_address]).await.unwrap();
+            let mut addresses = vec![
+                coal_config_address,
+                ore_config_address,
+                tool_address,
+                guild_config_address,
+                guild_member_address
+            ];
+            if guild_address.is_some() {
+                addresses.push(guild_address.unwrap());
+            }
+            let accounts = self.rpc_client.get_multiple_accounts(&addresses).await.unwrap();
 
             let coal_config = deserialize_config(&accounts[0].as_ref().unwrap().data, &Resource::Coal);
             let ore_config = deserialize_config(&accounts[1].as_ref().unwrap().data, &Resource::Ore);
-            let tool: Option<ToolType> = if accounts[2].as_ref().is_some() {
-                Some(deserialize_tool(&accounts[2].as_ref().unwrap().data, &Resource::Coal))
-            } else {
-                None
-            };
-            let member: Option<coal_guilds_api::state::Member> = if accounts[3].as_ref().is_some() {
-                Some(deserialize_member(&accounts[3].as_ref().unwrap().data))
-            } else {
-                None
-            };
+            
+            let mut tool: Option<ToolType> = None;
+            let mut member: Option<coal_guilds_api::state::Member> = None;
+            let mut guild_config: Option<coal_guilds_api::state::Config> = None;
+            
+            if accounts.len() > 2 {
+                if accounts[2].as_ref().is_some() {
+                    tool = Some(deserialize_tool(&accounts[2].as_ref().unwrap().data, &Resource::Coal))
+                }
+
+                if accounts.len() > 3 && accounts[3].as_ref().is_some() {
+                    guild_config = Some(deserialize_guild_config(&accounts[2].as_ref().unwrap().data));
+                }
+
+                if accounts.len() > 4 && accounts[4].as_ref().is_some() {
+                    member = Some(deserialize_member(&accounts[3].as_ref().unwrap().data));
+                }
+
+                if accounts.len() > 5 && accounts[5].as_ref().is_some() {
+                    guild = Some(deserialize_guild(&accounts[4].as_ref().unwrap().data));
+                }
+            }
+
+            if member.is_some() && member.unwrap().guild.ne(&system_program::id()) && guild_address.is_none() {
+                let guild_data = self.rpc_client.get_account_data(&member.unwrap().guild).await.unwrap();
+                guild = Some(deserialize_guild(&guild_data));
+                guild_address = Some(member.unwrap().guild);
+            }
             
             // Fetch coal_proof
             let (coal_proof, ore_proof) = tokio::join!(
@@ -322,17 +376,33 @@ impl Miner {
             let ore_min_difficulty = ore_config.min_difficulty();
 
             println!(
-                "\n\nStake: {} COAL\n{}  Multiplier: {:12}x",
+                "\n\nStake: {} {}\n {} Stake Multiplier: {:12}x\n Tool Multiplier: {:12}x\n LP Stake Multiplier: {:12}x",
                 amount_u64_to_string(coal_proof.balance()),
+                get_resource_name(&Resource::Coal),
                 if last_coal_hash_at.gt(&0) {
                     format!(
-                        "  Change: {} COAL\n",
-                        amount_u64_to_string(coal_proof.balance().saturating_sub(last_coal_balance))
+                        "  Change: {} {}\n",
+                        amount_u64_to_string(coal_proof.balance().saturating_sub(last_coal_balance)),
+                        get_resource_name(&Resource::Coal)
                     )
                 } else {
                     "".to_string()
                 },
-                calculate_multiplier(coal_proof.balance(), coal_top_balance)
+                calculate_multiplier(coal_proof.balance(), coal_top_balance),
+                calculate_tool_multipler(&tool),
+                match guild_config {
+                    Some(guild_config) => {
+                        match guild {
+                            Some(guild) => calculate_stake_multiplier(guild.total_stake, guild_config.total_stake, guild_config.total_multiplier),
+                            None => if member.is_some() { 
+                                calculate_stake_multiplier(member.unwrap().total_stake, guild_config.total_stake, guild_config.total_multiplier)
+                            } else { 
+                                0.0
+                            },
+                        }
+                    },
+                    None => 0.0,
+                }
             );
             println!(
                 "Stake: {} ORE\n{}  Multiplier: {:12}x",
@@ -393,7 +463,7 @@ impl Miner {
                     None => None
                 },
                 match member {
-                    Some(_) => Some(member_address),
+                    Some(_) => Some(guild_member_address),
                     None => None
                 },
                 match member {

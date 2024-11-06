@@ -325,4 +325,4 @@ pub struct GuildLeaveArgs {}
 pub struct NewGuildArgs {}
 
 #[derive(Parser, Debug)]
-pub struct NewMemberArgs {}
+pub struct GuildMemberArgs {}

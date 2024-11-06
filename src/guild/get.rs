@@ -1,4 +1,4 @@
-use coal_guilds_api::state::{member_pda, config_pda};
+use coal_guilds_api::state::{member_pda, config_pda, guild_pda};
 use solana_sdk::signer::Signer;
 
 use crate::{
@@ -18,7 +18,7 @@ impl Miner {
         let config = config_pda();
         let member = member_pda(signer.pubkey());
         let accounts = self.rpc_client.get_multiple_accounts(&[member.0, config.0]).await.unwrap();
-        let config = deserialize_config(&accounts[1].as_ref().unwrap().data);
+        let config = deserialize_config(&accounts[1].as_ref().unwrap().data);;
         
         println!("Total network stake: {}", amount_u64_to_string(config.total_stake));
         println!("Total staking multiplier: {}x", config.total_multiplier.to_string());

@@ -1,4 +1,4 @@
-use coal_guilds_api::state::{member_pda, config_pda, guild_pda};
+use coal_guilds_api::state::{member_pda, config_pda};
 use solana_sdk::signer::Signer;
 
 use crate::{

@@ -146,6 +146,9 @@ enum GuildCommands {
     #[command(about = "Unstake from your guild")]
     Unstake(GuildUnstakeArgs),
 
+    #[command(about = "Create a new member")]
+    Member(GuildMemberArgs),
+
     #[cfg(feature = "admin")]
     #[command(about = "Initialize the guild program")]
     Initialize(InitializeArgs),
@@ -357,6 +360,9 @@ async fn main() {
             }
             GuildCommands::Unstake(args) => {
                 miner.guild_unstake(args).await;
+            }
+            GuildCommands::Member(_) => {
+                miner.guild_member().await;
             }
             #[cfg(feature = "admin")]
             GuildCommands::Initialize(_) => {

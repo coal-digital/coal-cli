@@ -345,15 +345,15 @@ impl Miner {
                 }
 
                 if accounts.len() > 3 && accounts[3].as_ref().is_some() {
-                    guild_config = Some(deserialize_guild_config(&accounts[2].as_ref().unwrap().data));
+                    guild_config = Some(deserialize_guild_config(&accounts[3].as_ref().unwrap().data));
                 }
 
                 if accounts.len() > 4 && accounts[4].as_ref().is_some() {
-                    member = Some(deserialize_member(&accounts[3].as_ref().unwrap().data));
+                    member = Some(deserialize_member(&accounts[4].as_ref().unwrap().data));
                 }
 
                 if accounts.len() > 5 && accounts[5].as_ref().is_some() {
-                    guild = Some(deserialize_guild(&accounts[4].as_ref().unwrap().data));
+                    guild = Some(deserialize_guild(&accounts[5].as_ref().unwrap().data));
                 }
             }
 
@@ -405,7 +405,7 @@ impl Miner {
                 }
             );
             println!(
-                "Stake: {} ORE\n{}  Multiplier: {:12}x",
+                "Stake: {} ORE\n{}",
                 amount_u64_to_string(ore_proof.balance()),
                 if last_ore_hash_at.gt(&0) {
                     format!(
@@ -415,7 +415,6 @@ impl Miner {
                 } else {
                     "".to_string()
                 },
-                calculate_multiplier(ore_proof.balance(), ore_top_balance)
             );
             
 
@@ -664,6 +663,7 @@ impl Miner {
 }
 
 fn calculate_multiplier(balance: u64, top_balance: u64) -> f64 {
+   println!("balance: {}, top_balance: {}", balance, top_balance);
    1.0 + (balance as f64 / top_balance as f64).min(1.0f64)
 }
 

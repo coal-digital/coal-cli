@@ -946,11 +946,11 @@ checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
 
 [[package]]
 name = "coal-api"
-version = "2.5.4"
+version = "2.6.0"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
- "coal-guilds-api",
+ "coal-guilds-api 1.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "coal-utils",
  "const-crypto",
  "drillx",
@@ -976,7 +976,7 @@ dependencies = [
  "chrono",
  "clap 4.5.9",
  "coal-api",
- "coal-guilds-api",
+ "coal-guilds-api 1.0.0",
  "coal-utils",
  "colored",
  "core_affinity",
@@ -1026,8 +1026,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "coal-guilds-api"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "48857417be74314847a379bbb61135920c31e0ff0fcb09c5acaa48cde64ec354"
+dependencies = [
+ "array-const-fn-init",
+ "bytemuck",
+ "const-crypto",
+ "num_enum 0.7.2",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "static_assertions",
+ "steel",
+ "thiserror",
+]
+
+[[package]]
 name = "coal-utils"
-version = "2.5.4"
+version = "2.6.0"
 dependencies = [
  "bytemuck",
  "solana-program",

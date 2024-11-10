@@ -371,7 +371,6 @@ impl Miner {
             );
 
             let coal_top_balance = coal_config.top_balance();
-            let ore_top_balance = ore_config.top_balance();
             let coal_min_difficulty = coal_config.min_difficulty();
             let ore_min_difficulty = ore_config.min_difficulty();
 

@@ -26,6 +26,7 @@ impl Miner {
         if accounts[0].is_some() {
             let member = deserialize_member(&accounts[0].as_ref().unwrap().data);
             println!("Member stake: {}", amount_u64_to_string(member.total_stake));
+            println!("Member is active: {}", if member.is_active == 1 { "Yes" } else { "No" });
             println!("Member last stake at: {}", member.last_stake_at);
             println!("Member multiplier: {}x", calculate_multiplier(config.total_stake, config.total_multiplier, member.total_stake));
             

@@ -131,6 +131,9 @@ enum GuildCommands {
     #[command(about = "Join a guild")]
     Join(GuildJoinArgs),
 
+    #[command(about = "Delegate stake to a guild")]
+    Delegate(GuildDelegateArgs),
+
     #[command(about = "Invite a member to your guild")]
     Invite(GuildInviteArgs),
 
@@ -345,6 +348,9 @@ async fn main() {
             }
             GuildCommands::Join(args) => {
                 miner.guild_join(args).await;
+            }
+            GuildCommands::Delegate(args) => {
+                miner.guild_delegate(args).await;
             }
             GuildCommands::Invite(args) => {
                 miner.guild_invite(args).await;

@@ -1,6 +1,7 @@
 mod get;
 mod invite;
 mod join;
+mod delegate;
 mod leave;
 mod new;
 mod stake;

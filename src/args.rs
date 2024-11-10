@@ -295,6 +295,11 @@ pub struct GuildJoinArgs {
 }
 
 #[derive(Parser, Debug)]
+pub struct GuildDelegateArgs {
+    pub guild: String,
+}
+
+#[derive(Parser, Debug)]
 pub struct GuildInviteArgs {
     pub member: String,
 }

@@ -324,6 +324,9 @@ pub struct GuildGetArgs {
 }
 
 #[derive(Parser, Debug)]
+pub struct GuildListArgs {}
+
+#[derive(Parser, Debug)]
 pub struct GuildLeaveArgs {}
 
 #[derive(Parser, Debug)]

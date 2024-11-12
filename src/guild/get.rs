@@ -18,8 +18,9 @@ impl Miner {
         let config = config_pda();
         let member = member_pda(signer.pubkey());
         let accounts = self.rpc_client.get_multiple_accounts(&[member.0, config.0]).await.unwrap();
+
         let config = deserialize_config(&accounts[1].as_ref().unwrap().data);
-        
+        print!("config total_multiplier: {}", config.total_multiplier);
         println!("Total network stake: {}", amount_u64_to_string(config.total_stake));
         println!("Total staking multiplier: {}x", config.total_multiplier.to_string());
 

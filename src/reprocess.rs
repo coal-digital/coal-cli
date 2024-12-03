@@ -59,7 +59,6 @@ impl Miner {
             match self.rpc_client.get_slot().await {
                 Ok(current_slot) => {
                     if current_slot >= target_slot - 1 {
-                        // println!("{} {}", "INFO".bold().green(), format!("Target slot {} reached", target_slot));
                         progress_bar.finish_with_message(format!("Target slot {} reached", target_slot));
                         let ix = coal_api::instruction::reprocess(signer.pubkey());
                         self.send_and_confirm(&[ix], ComputeBudget::Fixed(200_000), false).await.ok();

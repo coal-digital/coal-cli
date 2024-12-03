@@ -20,6 +20,7 @@ mod utils;
 mod smelt;
 mod replant;
 mod reprocess;
+mod enhance;
 mod equip;
 mod unequip;
 mod inspect;
@@ -110,6 +111,9 @@ enum Commands {
 
     #[command(about = "Inspect tool")]
     Inspect(InspectArgs),
+
+    #[command(about = "Enhance tool")]
+    Enhance(EnhanceArgs),
 
     #[command(about = "Guild commands", subcommand)]
     Guild(GuildCommands),
@@ -338,6 +342,9 @@ async fn main() {
         }
         Commands::Unequip(args) => {
             miner.unequip(args).await;
+        }
+        Commands::Enhance(args) => {
+            miner.enhance(args).await;
         }
         Commands::Inspect(args) => {
             miner.inspect(args).await;

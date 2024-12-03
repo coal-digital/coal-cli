@@ -114,6 +114,16 @@ pub struct EquipArgs {
 }
 
 #[derive(Parser, Debug)]
+pub struct EnhanceArgs {
+    #[arg(
+        long,
+        value_name = "TOOL",
+        help = "The tool to enhance."
+    )]
+    pub tool: String,
+}
+
+#[derive(Parser, Debug)]
 pub struct UnequipArgs {
     #[arg(
         long,

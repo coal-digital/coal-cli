@@ -1709,8 +1709,6 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 [[package]]
 name = "forge-api"
 version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56555b770fa77f9a16c2b16fccbb9ab8cb09de728bbeb5d9b8e9f8e86b056896"
 dependencies = [
  "array-const-fn-init",
  "borsh 1.5.1",
@@ -1730,9 +1728,7 @@ dependencies = [
 
 [[package]]
 name = "forge-utils"
-version = "1.0.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac2a8931cb3af6d2d1cfaa2129a825c1227a95edf572fbd97cdcf3bb5d2a1b87"
+version = "1.0.3"
 dependencies = [
  "bytemuck",
  "solana-program",

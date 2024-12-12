@@ -164,8 +164,8 @@ impl ToolType {
 
     pub fn multiplier(&self) -> u64 {
         match self {
-            ToolType::Tool(tool) => tool.multiplier,
-            ToolType::WoodTool(tool) => tool.multiplier,
+            ToolType::Tool(tool) => tool.multiplier.max(300),
+            ToolType::WoodTool(tool) => tool.multiplier.max(300),
         }
     }
 } 

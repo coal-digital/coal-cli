@@ -66,7 +66,7 @@ impl Miner {
                 println!("You need {:?} Chromium tokens to enhance this tool", required_burn_amount);
                 if amount.le(&required_burn_amount) {
                     println!("You don't have enough Chromium tokens to enhance this tool");
-                    return;
+                    // return;
                 }
             }
             Err(e) => {

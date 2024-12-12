@@ -132,9 +132,6 @@ enum GuildCommands {
     #[command(about = "Get your guild information")]
     Get(GuildGetArgs),
 
-    #[command(about = "List all guilds")]
-    List(GuildListArgs),
-
     #[command(about = "Join a guild")]
     Join(GuildJoinArgs),
 
@@ -355,9 +352,6 @@ async fn main() {
         Commands::Guild(guild_command) => match guild_command {
             GuildCommands::Get(args) => {
                 miner.get_guild(args).await;
-            }
-            GuildCommands::List(_) => {
-                miner.list_guild().await;
             }
             GuildCommands::Join(args) => {
                 miner.guild_join(args).await;

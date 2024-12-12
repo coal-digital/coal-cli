@@ -9,10 +9,10 @@ use forge_api::{
 use mpl_core::{Asset, types::UpdateAuthority};
 use solana_client::nonblocking::rpc_client::RpcClient;
 use solana_rpc_client::spinner;
-use solana_sdk::{signature::{Keypair, Signer}, pubkey::Pubkey};
+use solana_sdk::{signature::{Keypair, Signer}, pubkey::Pubkey, transaction::Transaction};
 
 use forge_utils::AccountDeserialize;
-use crate::{Miner, args::EnhanceArgs, send_and_confirm::ComputeBudget};
+use crate::{Miner, args::{EnhanceArgs, EquipArgs}, send_and_confirm::ComputeBudget, utils::ask_confirm};
 
 fn get_enhancer_address(signer: &Pubkey, asset: &Pubkey) -> Pubkey {
     Pubkey::find_program_address(&[ENHANCER_SEED, signer.as_ref(), asset.as_ref()], &forge_api::id()).0
@@ -20,6 +20,7 @@ fn get_enhancer_address(signer: &Pubkey, asset: &Pubkey) -> Pubkey {
 
 async fn get_enhancer(client: &RpcClient, signer: &Pubkey, asset: &Pubkey) -> Option<Enhancer> {
     let address = get_enhancer_address(&signer, &asset);
+    println!("Enhancer address: {}", address);
     let account_data = client.get_account_data(&address).await;
 
     if let Ok(account_data) = account_data {
@@ -46,7 +47,7 @@ impl Miner {
             _ => panic!("Invalid update authority"),
         };
         println!("Durability: {}", durability);
-        let required_burn_amount = durability / 100.0;
+        let required_burn_amount = durability / 1000.0;
 
         let chromium_tokens = spl_associated_token_account::get_associated_token_address(
             &signer.pubkey(),
@@ -82,7 +83,11 @@ impl Miner {
                 signer.pubkey(), 
                 asset_address,
             );
-            self.send_and_confirm(&[ix], ComputeBudget::Fixed(100_000), false).await.ok();
+            let res = self.send_and_confirm(&[ix], ComputeBudget::Fixed(100_000), false).await;
+            if res.is_err() {
+                println!("Failed to initialize chromium enhancer: {:?}", res);
+                return;
+            }
             enhancer = get_enhancer(&self.rpc_client, &signer.pubkey(), &asset_address).await;
         }
 
@@ -94,16 +99,32 @@ impl Miner {
         loop {
             match self.rpc_client.get_slot().await {
                 Ok(current_slot) => {
-                    if current_slot >= target_slot - 1 {
+                    if current_slot >= target_slot {
                         progress_bar.finish_with_message(format!("Target slot {} reached", target_slot));
+
+                        let blockhash = self.rpc_client.get_latest_blockhash().await.unwrap();
                         let ix = forge_api::instruction::enhance(
                             signer.pubkey(), 
                             asset_address,
                             new_mint.pubkey(),
                             collection_address,
                         );
-                        let res = self.send_and_confirm(&[ix], ComputeBudget::Fixed(200_000), false).await.ok();
-                        println!("{:?}", res);
+                        let tx = Transaction::new_signed_with_payer(
+                            &[ix],
+                            Some(&self.signer().pubkey()),
+                            &[&self.signer(), &new_mint],
+                            blockhash,
+                        );
+                        let res = self.rpc_client.send_and_confirm_transaction(&tx).await;
+                        if res.is_err() {
+                            progress_bar.finish_with_message(format!("Failed to finalize enhancement: {:?}", res));
+                            return;
+                        }
+                        progress_bar.finish_with_message(format!("Tool enhanced successfully! New tool address: {}", new_mint.pubkey()));
+                        let asset_data = self.rpc_client.get_account_data(&new_mint.pubkey()).await.unwrap();
+                        let asset = Asset::from_bytes(&asset_data).unwrap();
+                        let multiplier = asset.plugin_list.attributes.unwrap().attributes.attribute_list.iter().find(|attr| attr.key == "multiplier").unwrap().value.parse::<f64>().unwrap();
+                        println!("You minted a {}x multiplier!", multiplier / 100.0);
                         break;
                     }
                     sleep(Duration::from_millis(400)).await;
@@ -114,7 +135,19 @@ impl Miner {
                 }
             }
         }
+
+        if !ask_confirm(
+            format!(
+                "\nWould you like to equip the enhanced pickaxe? [Y/n]",
+            )
+            .as_str(),
+        ) {
+            println!("To equip the tool, use command: coal equip --tool {:?}", new_mint.pubkey());
+            return;
+        }
         
-        println!("Tool enhanced successfully!");
+        self.equip(EquipArgs {
+            tool: new_mint.pubkey().to_string(),
+        }).await;
     }
 }

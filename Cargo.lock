@@ -946,24 +946,22 @@ checksum = "4b82cf0babdbd58558212896d1a4272303a57bdb245c2bf1147185fb45640e70"
 
 [[package]]
 name = "coal-api"
-version = "2.6.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c842781fea462e471c388e046914b4236128086ec0c4bfd92413b3f14435ff08"
+version = "3.0.0"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
- "coal-guilds-api",
- "coal-utils",
+ "coal-guilds-api 1.1.0",
  "const-crypto",
  "drillx",
- "mpl-core",
  "mpl-token-metadata",
  "num_enum 0.7.2",
+ "ore-api",
+ "ore-boost-api",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
  "static_assertions",
- "steel",
+ "steel 2.1.1",
  "thiserror",
 ]
 
@@ -978,8 +976,7 @@ dependencies = [
  "chrono",
  "clap 4.5.9",
  "coal-api",
- "coal-guilds-api",
- "coal-utils",
+ "coal-guilds-api 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "colored",
  "core_affinity",
  "drillx",
@@ -990,13 +987,11 @@ dependencies = [
  "mpl-core",
  "num_cpus",
  "ore-api",
- "ore-utils",
+ "ore-boost-api",
  "rand 0.8.5",
  "reqwest 0.12.4",
  "serde",
  "serde_json",
- "smelter-api",
- "smelter-utils",
  "solana-cli-config",
  "solana-client",
  "solana-program",
@@ -1005,10 +1000,26 @@ dependencies = [
  "solana-transaction-status",
  "spl-associated-token-account",
  "spl-token",
- "steel",
+ "steel 2.1.1",
  "tokio",
  "tokio-tungstenite 0.16.1",
  "url",
+]
+
+[[package]]
+name = "coal-guilds-api"
+version = "1.1.0"
+dependencies = [
+ "array-const-fn-init",
+ "bytemuck",
+ "const-crypto",
+ "num_enum 0.7.2",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "static_assertions",
+ "steel 1.3.0",
+ "thiserror",
 ]
 
 [[package]]
@@ -1025,20 +1036,8 @@ dependencies = [
  "spl-associated-token-account",
  "spl-token",
  "static_assertions",
- "steel",
+ "steel 1.3.0",
  "thiserror",
-]
-
-[[package]]
-name = "coal-utils"
-version = "2.5.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ab02c19fe0ff6ad00c76ea458eb40ca8153224ceffab64af13920ee25ae94d8"
-dependencies = [
- "bytemuck",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
 ]
 
 [[package]]
@@ -1708,9 +1707,9 @@ checksum = "00b0228411908ca8685dba7fc2cdd70ec9990a6e753e89b6ac91a84c40fbaf4b"
 
 [[package]]
 name = "forge-api"
-version = "1.0.3"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "56555b770fa77f9a16c2b16fccbb9ab8cb09de728bbeb5d9b8e9f8e86b056896"
+checksum = "ba2e18aaea66070ca87bdbfe0624b10a1c408d3fd85d3ad170604dd3fb47084b"
 dependencies = [
  "array-const-fn-init",
  "borsh 1.5.1",
@@ -1730,9 +1729,9 @@ dependencies = [
 
 [[package]]
 name = "forge-utils"
-version = "1.0.2"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac2a8931cb3af6d2d1cfaa2129a825c1227a95edf572fbd97cdcf3bb5d2a1b87"
+checksum = "146f4df7033b902b17b50ab1c1c9e6b531f46c63e27ad7dc7ba208f919ffbad6"
 dependencies = [
  "bytemuck",
  "solana-program",
@@ -2921,9 +2920,9 @@ dependencies = [
 
 [[package]]
 name = "ore-api"
-version = "2.1.9"
+version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "26f004e50a7fba301eb53caa4f8ce772c1a512f314de64cff580f90fb1dff8d1"
+checksum = "5fe81730f32cc3e75a1dda6ed6aa824d6bab2622867a135d4173851fda40f14a"
 dependencies = [
  "array-const-fn-init",
  "bytemuck",
@@ -2931,24 +2930,31 @@ dependencies = [
  "drillx",
  "mpl-token-metadata",
  "num_enum 0.7.2",
- "ore-utils",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
  "static_assertions",
+ "steel 2.1.1",
  "thiserror",
 ]
 
 [[package]]
-name = "ore-utils"
-version = "2.1.9"
+name = "ore-boost-api"
+version = "1.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a2d6933b14c84fb91ad7ab2e8fccff589884a81507c1a198dea4f03f3180ef4"
+checksum = "d411235d02c569642d08b191bb8f37e5806395fba70ef08515fe81d57bbcf3f1"
 dependencies = [
+ "array-const-fn-init",
  "bytemuck",
+ "const-crypto",
+ "num_enum 0.7.2",
+ "ore-api",
  "solana-program",
  "spl-associated-token-account",
  "spl-token",
+ "static_assertions",
+ "steel 2.1.1",
+ "thiserror",
 ]
 
 [[package]]
@@ -3974,38 +3980,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3c5e1a9a646d36c3599cd173a41282daf47c44583ad367b8e6837255952e5c67"
 
 [[package]]
-name = "smelter-api"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a420e0ac1f747980deaf60841a2cc2eec70ed1c5ff8d5c871edc340ec50ff22a"
-dependencies = [
- "array-const-fn-init",
- "bytemuck",
- "const-crypto",
- "drillx",
- "mpl-token-metadata",
- "num_enum 0.7.2",
- "smelter-utils",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
- "static_assertions",
- "thiserror",
-]
-
-[[package]]
-name = "smelter-utils"
-version = "1.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f5c350489d1dc4132fc708882a470d7c4cbb47cc94d8808bcb1ca8f86e264ad"
-dependencies = [
- "bytemuck",
- "solana-program",
- "spl-associated-token-account",
- "spl-token",
-]
-
-[[package]]
 name = "socket2"
 version = "0.5.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5003,6 +4977,20 @@ name = "steel"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d88c610ca9fd5e4e51bdb6e9964114133a42f006713fe38aff37266fac91e1be"
+dependencies = [
+ "bytemuck",
+ "num_enum 0.7.2",
+ "solana-program",
+ "spl-associated-token-account",
+ "spl-token",
+ "thiserror",
+]
+
+[[package]]
+name = "steel"
+version = "2.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7a2ca3cc310b7b71ce7944af64fb4fdaa5d0c2848ac79616d75e401913b6f781"
 dependencies = [
  "bytemuck",
  "num_enum 0.7.2",

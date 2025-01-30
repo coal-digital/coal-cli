@@ -1,11 +1,12 @@
 use std::str::FromStr;
 
+use coal_api::{consts::MINT_ADDRESS, state::proof_pda};
 use solana_program::pubkey::Pubkey;
 use solana_sdk::signature::Signer;
 
 use crate::{
     args::BalanceArgs,
-    utils::{amount_u64_to_string, get_proof_with_authority, get_resource_name, get_resource_from_str, get_resource_mint, Resource},
+    utils::{amount_u64_to_string, deserialize_proof},
     Miner,
 };
 
@@ -22,20 +23,14 @@ impl Miner {
         } else {
             signer.pubkey()
         };
-        let resource = get_resource_from_str(&args.resource);
 
-        let proof = match resource {
-            Resource::Chromium => None,
-            _ => {
-                let proof = get_proof_with_authority(&self.rpc_client, address, &resource).await;
-                Some(proof)
-            }
-        };
+        let mint: Pubkey = MINT_ADDRESS;
+        let proof_address = proof_pda(mint, address).0;
+        let proof_account = self.rpc_client.get_account(&proof_address).await;
 
-        let token_mint: Pubkey = get_resource_mint(&resource);
         let token_account_address = spl_associated_token_account::get_associated_token_address(
             &address,
-        &token_mint,
+            &mint,
         );
         let token_balance = if let Ok(Some(token_account)) = self
             .rpc_client
@@ -46,21 +41,18 @@ impl Miner {
         } else {
             "0".to_string()
         };
-        
-        let resource_name = get_resource_name(&resource);
 
-        match proof {
-            Some(proof) => {
+        match proof_account {
+            Ok(account_info) => {
+                let proof = deserialize_proof(&account_info.data);
                 println!(
-                    "Balance: {} {}\nStake: {} {}",
+                    "Balance: {} COAL\nStake: {} COAL",
                     token_balance,
-                    resource_name,
-                    amount_u64_to_string(proof.balance()),
-                    resource_name,
+                    amount_u64_to_string(proof.balance),
                 )
             }
-            None => {
-                println!("Balance: {} {}", token_balance, resource_name);
+            Err(_) => {
+                println!("Balance: {} COAL", token_balance);
             }
         }
     }

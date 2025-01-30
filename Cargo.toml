@@ -31,15 +31,15 @@ futures = "0.3.30"
 indicatif = "0.17.8"
 num_cpus = "1.16.0"
 mpl-core = "0.8.0"
-coal-api = "2.6.0"
-coal-utils = "2.5.2"
+# coal-api = "2.6.0"
+# coal-utils = "2.5.2"
 coal-guilds-api = "1.1.0"
-smelter-api = "1.0.1"
-smelter-utils = "1.0.1"
+# smelter-api = "1.0.1"
+# smelter-utils = "1.0.1"
 forge-api = "1.0.3"
 forge-utils = "1.0.2"
-ore-api = "=2.1.9"
-ore-utils = "=2.1.9"
+ore-api = "3.0"
+ore-boost-api = "1.1"
 rand = "0.8.4"
 reqwest = { version = "0.12", features = ["json"] }
 solana-cli-config = "^1.18"
@@ -57,11 +57,11 @@ tokio = "1.35.1"
 url = "2.5"
 tokio-tungstenite = "0.16"
 serde = { version = "1.0", features = ["derive"] }
-steel = "1.2"
+steel = "2.0.0"
 
 # [patch.crates-io]
 # drillx = { path = "../drillx/drillx" }
-# coal-api = { path = "../coal/api" }
+coal-api = { path = "../coal-v2/api" }
 # coal-utils = { path = "../coal/utils" }
 # ore-api = { path = "../ore/api" }
 # ore-utils = { path = "../ore/utils" }

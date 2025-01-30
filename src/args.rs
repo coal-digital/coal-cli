@@ -8,12 +8,6 @@ pub struct BalanceArgs {
         help = "The account address to fetch the balance of."
     )]
     pub address: Option<String>,
-    #[arg(
-        long,
-        value_name = "RESOURCE",
-        help = "The token to claim."
-    )]
-    pub resource: Option<String>,
 }
 
 #[derive(Parser, Debug)]
@@ -158,22 +152,6 @@ pub struct MineArgs {
         default_value = "5"
     )]
     pub buffer_time: u64,
-
-    #[arg(
-        long,
-        short,
-        value_name = "MERGED",
-        help = "Whether to also mine ORE.",
-        default_value = "none"
-    )]
-    pub merged: String,
-
-    #[arg(
-        long,
-        value_name = "RESOURCE",
-        help = "The resource to mine."
-    )]
-    pub resource: Option<String>,
 }
 
 #[derive(Parser, Debug)]

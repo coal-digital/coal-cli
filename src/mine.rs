@@ -7,69 +7,36 @@ use drillx::{
     equix::{self},
     Hash, Solution,
 };
-use coal_api::{consts::*, state::Bus};
-use coal_utils::AccountDeserialize;
-use ore_api;
+use coal_api::{consts::*, state::{Config, config_pda, proof_pda}};
+use ore_api::state::proof_pda as ore_proof_pda;
+use ore_boost_api::state::reservation_pda as ore_reservation_pda;
+use steel::AccountDeserialize;
 use rand::Rng;
 use solana_program::{pubkey::Pubkey, instruction::Instruction, system_program};
 use solana_rpc_client::spinner;
 use solana_sdk::signer::Signer;
-use tokio;
 
 
 use crate::{
     args::MineArgs,
     send_and_confirm::ComputeBudget,
     guild::utils::{deserialize_member, deserialize_guild, deserialize_config as deserialize_guild_config},
-    utils::{
-        Resource, ConfigType,
-        amount_u64_to_string,
-        get_clock, get_config,
-        get_updated_proof_with_authority, 
-        proof_pubkey, get_resource_from_str, get_resource_name, 
-        get_resource_bus_addresses, get_tool_pubkey, get_config_pubkey, 
-        deserialize_tool, deserialize_config,
-        ToolType,
-    },
+    utils::{amount_u64_to_string, get_clock, get_config, deserialize_config, get_updated_ore_proof_with_authority, deserialize_proof, deserialize_reservation},
     Miner,
 };
 
 impl Miner {
     pub async fn mine(&self, args: MineArgs) {
         // Open account, if needed.
-        let merged = args.merged.clone();
-
-        match merged.as_str() {
-            "ore" => {
-                println!("{} {}", "INFO".bold().green(), "Started merged mining...");
-                self.process_mine_merged(args).await;
-            }
-            "none" => {
-                self.process_mine(args).await;
-            }
-            _ => {
-                println!("{} {} \"{}\" {}", "ERROR".bold().red(), "Argument value", merged, "not recognized");
-                return;
-            }
-        }
-    }
-
-    async fn process_mine(&self, args: MineArgs) {
-        let resource = get_resource_from_str(&args.resource);
+        let mint = MINT_ADDRESS;
         let signer = self.signer();
 
-        // Check if resource is valid
-        if resource == Resource::Ingots {
-            println!("{} {}", "ERROR".bold().red(), "Use smelt command for ingots");
-            return;
-        }
-
-        println!("{} {} {} {}", "INFO".bold().green(), "Started", get_resource_name(&resource), get_action_name(&resource));
-
-        self.open(resource.clone()).await;
-
+        self.open().await;
+        
         // Check num threads
         self.check_num_cores(args.cores);
+
+        println!("{} {}", "INFO".bold().green(), "Started mining");
 
         // Start mining loop
         let mut last_hash_at = 0;
@@ -77,43 +44,37 @@ impl Miner {
 
         let mut guild: Option<coal_guilds_api::state::Guild> = None;
         let mut guild_address: Option<Pubkey> = None;
-        
-        loop {
-            // Fetch coal_proof
-            let config_address = get_config_pubkey(&resource);
-            let tool_address = get_tool_pubkey(signer.pubkey(), &resource);
-            let guild_config_address = coal_guilds_api::state::config_pda().0;
-            let guild_member_address = coal_guilds_api::state::member_pda(signer.pubkey()).0;
-            
-            let accounts = match resource {
-                Resource::Coal => {
-                    let mut accounts: Vec<Pubkey> = vec![config_address, tool_address, guild_config_address, guild_member_address];
-                    if guild_address.is_some() {
-                        accounts.push(guild_address.unwrap());
-                    }
-                    self.rpc_client.get_multiple_accounts(&accounts).await.unwrap()
-                },
-                Resource::Wood => self.rpc_client.get_multiple_accounts(&[config_address, tool_address]).await.unwrap(),
-                _ => self.rpc_client.get_multiple_accounts(&[config_address]).await.unwrap(),
-            };
-            
-            let config = deserialize_config(&accounts[0].as_ref().unwrap().data, &resource);
-            
 
-            let mut tool: Option<ToolType> = None;
+
+        let config_address = config_pda(mint).0;
+        let proof_address = proof_pda(mint, signer.pubkey()).0;
+        let ore_proof_address = ore_proof_pda(proof_address).0;
+        let ore_reservation_address = ore_reservation_pda(ore_proof_address).0;
+        let guild_config_address = coal_guilds_api::state::config_pda().0;
+        let guild_member_address = coal_guilds_api::state::member_pda(signer.pubkey()).0;
+    
+        loop {    
+            let ore_proof = get_updated_ore_proof_with_authority(&self.rpc_client, proof_address, last_hash_at).await;
+
+            let mut addresses: Vec<Pubkey> = vec![config_address, proof_address, ore_reservation_address, guild_config_address, guild_member_address];
+            if guild_address.is_some() {
+                addresses.push(guild_address.unwrap());
+            }
+            let accounts = self.rpc_client.get_multiple_accounts(&addresses).await.unwrap();
+            
+            let config = deserialize_config(&accounts[0].as_ref().unwrap().data);
+            let proof = deserialize_proof(&accounts[1].as_ref().unwrap().data);
+            let reservation = deserialize_reservation(&accounts[2].as_ref().unwrap().data);
+
             let mut member: Option<coal_guilds_api::state::Member> = None;
             let mut guild_config: Option<coal_guilds_api::state::Config> = None;
             
             if accounts.len() > 1 {
-                if accounts[1].as_ref().is_some() {
-                    tool = Some(deserialize_tool(&accounts[1].as_ref().unwrap().data, &resource));
-                }
-
-                if accounts.len() > 2 && accounts[2].as_ref().is_some() {
+                if accounts[2].as_ref().is_some() {
                     guild_config = Some(deserialize_guild_config(&accounts[2].as_ref().unwrap().data));
                 }
-
-                if accounts.len() > 3 && accounts[3].as_ref().is_some() {
+            
+                if accounts[3].as_ref().is_some() {
                     member = Some(deserialize_member(&accounts[3].as_ref().unwrap().data));
                 }
 
@@ -128,267 +89,21 @@ impl Miner {
                 guild_address = Some(member.unwrap().guild);
             }
 
-            let proof = get_updated_proof_with_authority(&self.rpc_client, &resource, signer.pubkey(), last_hash_at).await;
-
-            let top_balance = config.top_balance();
-            let min_difficulty = config.min_difficulty();
+            let total_balance = config.total_balance;
+            let min_difficulty = config.min_difficulty;
             
-            match resource {
-                Resource::Coal => {
-                    println!(
-                        "\n\nStake: {} {}\n {} Stake Multiplier: {:12}x\n Tool Multiplier: {:12}x\n LP Stake Multiplier: {:12}x",
-                        amount_u64_to_string(proof.balance()),
-                        get_resource_name(&resource),
-                        if last_hash_at.gt(&0) {
-                            format!(
-                                "  Change: {} {}\n",
-                                amount_u64_to_string(proof.balance().saturating_sub(last_balance)),
-                                get_resource_name(&resource)
-                            )
-                        } else {
-                            "".to_string()
-                        },
-                        calculate_multiplier(proof.balance(), top_balance),
-                        calculate_tool_multipler(&tool),
-                        match guild_config {
-                            Some(guild_config) => {
-                                match guild {
-                                    Some(guild) => calculate_stake_multiplier(guild.total_stake, guild_config.total_stake, guild_config.total_multiplier),
-                                    None => if member.is_some() { 
-                                        calculate_stake_multiplier(member.unwrap().total_stake, guild_config.total_stake, guild_config.total_multiplier)
-                                    } else { 
-                                        0.0
-                                    },
-                                }
-                            },
-                            None => 0.0,
-                        }
-                    );
-                }
-                _ => {
-                    println!(
-                        "\n\nStake: {} {}\n{}  Multiplier: {:12}x \n Tool Multiplier: {:12}x",
-                        amount_u64_to_string(proof.balance()),
-                        get_resource_name(&resource),
-                        if last_hash_at.gt(&0) {
-                            format!(
-                                "  Change: {} {}\n",
-                                amount_u64_to_string(proof.balance().saturating_sub(last_balance)),
-                                get_resource_name(&resource)
-                            )
-                        } else {
-                            "".to_string()
-                        },
-                        calculate_multiplier(proof.balance(), top_balance),
-                        calculate_tool_multipler(&tool),
-                    );
-                }
-            }
-
-            last_hash_at = proof.last_hash_at();
-            last_balance = proof.balance();
-
-            // Calculate cutoff time
-            let duration = match resource {
-                Resource::Coal => ONE_MINUTE,
-                Resource::Ore => ONE_MINUTE,
-                Resource::Wood => ONE_MINUTE,
-                _ => 0,
-            };
-            let cutoff_time = self.get_cutoff(proof.last_hash_at(), duration, args.buffer_time).await;
-
-            // Run drillx
-            let solution = Self::find_hash_par(proof.challenge(), cutoff_time, args.cores, min_difficulty as u32, &resource)
-                .await;
-
-
-            // Build instruction set
-            let mut compute_budget = 500_000;
-            let mut ixs: Vec<Instruction> = vec![];
-
-            match resource {
-                Resource::Coal => {
-                    ixs.push(ore_api::instruction::auth(proof_pubkey(signer.pubkey(), Resource::Ore)));
-                    ixs.push(coal_api::instruction::auth(proof_pubkey(signer.pubkey(), Resource::Coal)));
-                },
-                Resource::Wood => {
-                    ixs.push(coal_api::instruction::auth(proof_pubkey(signer.pubkey(), Resource::Wood)));
-                },
-                Resource::Ore => {
-                    ixs.push(ore_api::instruction::auth(proof_pubkey(signer.pubkey(), Resource::Ore)));
-                },
-                _ => {
-                    return;
-                }
-            }
-
-            // Reset if needed
-            let config = get_config(&self.rpc_client, &resource).await;
-            if self.should_reset(config).await {
-                compute_budget += 100_000;
-
-                match resource {
-                    Resource::Coal => {
-                        ixs.push(coal_api::instruction::reset_coal(signer.pubkey()));
-                    },
-                    Resource::Wood => {
-                        ixs.push(coal_api::instruction::reset_wood(signer.pubkey()));
-                    },
-                    _ => {}
-                }
-            }
-
-            // Build mine ix
-            match resource {
-                Resource::Coal => {
-                    ixs.push(coal_api::instruction::mine_coal(
-                        signer.pubkey(),
-                        signer.pubkey(),
-                        self.find_bus(Resource::Coal).await,
-                        match tool {
-                            Some(_) => Some(tool_address),
-                            None => None
-                        },
-                        match member {
-                            Some(_) => Some(guild_member_address),
-                            None => None
-                        },
-                        match member {
-                            Some(member) => if member.guild.eq(&system_program::id()) {
-                                None
-                            } else {
-                                Some(member.guild)
-                            },
-                            None => None
-                        },
-                        solution,
-                    ));
-                },
-                Resource::Ore => {
-                    ixs.push(ore_api::instruction::mine(
-                        signer.pubkey(),
-                        signer.pubkey(),
-                        self.find_bus(Resource::Ore).await,
-                        solution,
-                    ));
-                },
-                Resource::Wood => {
-                    ixs.push(coal_api::instruction::chop_wood(
-                        signer.pubkey(),
-                        signer.pubkey(),
-                        self.find_bus(Resource::Wood).await,
-                        solution,
-                    ));
-                },
-                _ => {
-                    return;
-                }
-            }
-
-            // Submit transactions
-            self.send_and_confirm(&ixs, ComputeBudget::Fixed(compute_budget), false).await.ok();
-        }
-    }
-
-    async fn process_mine_merged(&self, args: MineArgs) {
-        // Open accounts, if needed.
-        let result = self.open_merged().await;
-        
-        if result.is_err() {
-            println!("{} {}", "ERROR".bold().red(), result.err().unwrap());
-            return;
-        }
-
-        let signer = self.signer();
-
-        // Check num threads
-        self.check_num_cores(args.cores);
-
-        // Start mining loop
-        let mut last_coal_hash_at = 0;
-        let mut last_coal_balance = 0;
-        let mut last_ore_hash_at = 0;
-        let mut last_ore_balance = 0;
-
-        let mut guild: Option<coal_guilds_api::state::Guild> = None;
-        let mut guild_address: Option<Pubkey> = None;
-
-        loop {
-            let coal_config_address = get_config_pubkey(&Resource::Coal);
-            let ore_config_address = get_config_pubkey(&Resource::Ore);
-            let tool_address = get_tool_pubkey(signer.pubkey(), &Resource::Coal);
-            let guild_config_address = coal_guilds_api::state::config_pda().0;
-            let guild_member_address = coal_guilds_api::state::member_pda(signer.pubkey()).0;
-
-            let mut addresses = vec![
-                coal_config_address,
-                ore_config_address,
-                tool_address,
-                guild_config_address,
-                guild_member_address
-            ];
-            if guild_address.is_some() {
-                addresses.push(guild_address.unwrap());
-            }
-            let accounts = self.rpc_client.get_multiple_accounts(&addresses).await.unwrap();
-
-            let coal_config = deserialize_config(&accounts[0].as_ref().unwrap().data, &Resource::Coal);
-            let ore_config = deserialize_config(&accounts[1].as_ref().unwrap().data, &Resource::Ore);
-            
-            let mut tool: Option<ToolType> = None;
-            let mut member: Option<coal_guilds_api::state::Member> = None;
-            let mut guild_config: Option<coal_guilds_api::state::Config> = None;
-            
-            if accounts.len() > 2 {
-                if accounts[2].as_ref().is_some() {
-                    tool = Some(deserialize_tool(&accounts[2].as_ref().unwrap().data, &Resource::Coal))
-                }
-
-                if accounts.len() > 3 && accounts[3].as_ref().is_some() {
-                    guild_config = Some(deserialize_guild_config(&accounts[3].as_ref().unwrap().data));
-                }
-
-                if accounts.len() > 4 && accounts[4].as_ref().is_some() {
-                    member = Some(deserialize_member(&accounts[4].as_ref().unwrap().data));
-                }
-
-                if accounts.len() > 5 && accounts[5].as_ref().is_some() {
-                    guild = Some(deserialize_guild(&accounts[5].as_ref().unwrap().data));
-                }
-            }
-
-            if member.is_some() && member.unwrap().guild.ne(&system_program::id()) && guild_address.is_none() {
-                let guild_data = self.rpc_client.get_account_data(&member.unwrap().guild).await.unwrap();
-                guild = Some(deserialize_guild(&guild_data));
-                guild_address = Some(member.unwrap().guild);
-            }
-            
-            // Fetch coal_proof
-            let (coal_proof, ore_proof) = tokio::join!(
-                // TODO: reduce the number of requests!
-                get_updated_proof_with_authority(&self.rpc_client, &Resource::Coal, signer.pubkey(), last_coal_hash_at),
-                get_updated_proof_with_authority(&self.rpc_client, &Resource::Ore, signer.pubkey(), last_ore_hash_at)
-            );
-
-            let coal_top_balance = coal_config.top_balance();
-            let coal_min_difficulty = coal_config.min_difficulty();
-            let ore_min_difficulty = ore_config.min_difficulty();
-
             println!(
-                "\n\nStake: {} {}\n {} Stake Multiplier: {:12}x\n Tool Multiplier: {:12}x\n LP Stake Multiplier: {:12}x",
-                amount_u64_to_string(coal_proof.balance()),
-                get_resource_name(&Resource::Coal),
-                if last_coal_hash_at.gt(&0) {
+                "\n\nStake: {} COAL\n {} Stake Multiplier: {:12}xx\n LP Stake Multiplier: {:12}x",
+                amount_u64_to_string(proof.balance),
+                if last_hash_at.gt(&0) {
                     format!(
-                        "  Change: {} {}\n",
-                        amount_u64_to_string(coal_proof.balance().saturating_sub(last_coal_balance)),
-                        get_resource_name(&Resource::Coal)
+                        "  Change: {} COAL\n",
+                        amount_u64_to_string(proof.balance.saturating_sub(last_balance)),
                     )
                 } else {
                     "".to_string()
                 },
-                calculate_multiplier(coal_proof.balance(), coal_top_balance),
-                calculate_tool_multipler(&tool),
+                calculate_multiplier(proof.balance, total_balance),
                 match guild_config {
                     Some(guild_config) => {
                         match guild {
@@ -403,81 +118,58 @@ impl Miner {
                     None => 0.0,
                 }
             );
-            println!(
-                "Stake: {} ORE\n{}",
-                amount_u64_to_string(ore_proof.balance()),
-                if last_ore_hash_at.gt(&0) {
-                    format!(
-                        "  Change: {} ORE\n",
-                        amount_u64_to_string(ore_proof.balance().saturating_sub(last_ore_balance))
-                    )
-                } else {
-                    "".to_string()
-                },
-            );
-            
-
-            last_coal_hash_at = coal_proof.last_hash_at();
-            last_coal_balance = coal_proof.balance();
-            last_ore_hash_at = ore_proof.last_hash_at();
-            last_ore_balance = ore_proof.balance();
 
             // Calculate cutoff time
-            let cutoff_time = self.get_cutoff(coal_proof.last_hash_at(), ONE_MINUTE, args.buffer_time).await;
+            let cutoff_time = self.get_cutoff(ore_proof.last_hash_at, ONE_MINUTE, args.buffer_time).await;
 
             // Run drillx
-            let min_difficulty = coal_min_difficulty.max(ore_min_difficulty);
-            let solution = Self::find_hash_par(coal_proof.challenge(), cutoff_time, args.cores, min_difficulty as u32, &Resource::Coal)
+            let solution = Self::find_hash_par(ore_proof.challenge, cutoff_time, args.cores, min_difficulty as u32)
                 .await;
 
 
-            let mut compute_budget = 950_000;
             // Build instruction set
-            let mut ixs = vec![
-                ore_api::instruction::auth(proof_pubkey(signer.pubkey(), Resource::Ore)),
-                coal_api::instruction::auth(proof_pubkey(signer.pubkey(), Resource::Coal)),
+            let mut compute_budget = 500_000;
+            let mut ixs: Vec<Instruction> = vec![
+                ore_api::sdk::auth(ore_api::state::proof_pda(proof_address).0)
             ];
 
             // Reset if needed
-            let coal_config = get_config(&self.rpc_client, &Resource::Coal).await;
-            if self.should_reset(coal_config).await {
+            let config = get_config(&self.rpc_client, mint).await;
+            
+            if self.should_reset(config).await {
                 compute_budget += 100_000;
-                ixs.push(coal_api::instruction::reset_coal(signer.pubkey()));
+                ixs.push(coal_api::sdk::reset(mint, signer.pubkey()));
             }
 
             // Build mine ix
-            ixs.push(ore_api::instruction::mine(
+            let ore_boost_address = if reservation.boost == Pubkey::default() {
+                None
+            } else {
+                Some(reservation.boost)
+            };
+
+            ixs.push(coal_api::sdk::mine(
+                mint,
                 signer.pubkey(),
                 signer.pubkey(),
-                self.find_bus(Resource::Ore).await,
+                self.find_bus().await,
+                self.find_ore_bus().await,
                 solution,
-            ));
-            ixs.push(coal_api::instruction::mine_coal(
-                signer.pubkey(),
-                signer.pubkey(),
-                self.find_bus(Resource::Coal).await,
-                match tool {
-                    Some(_) => Some(tool_address),
-                    None => None
-                },
                 match member {
                     Some(_) => Some(guild_member_address),
                     None => None
                 },
-                match member {
-                    Some(member) => if member.guild.eq(&system_program::id()) {
-                        None
-                    } else {
-                        Some(member.guild)
-                    },
+                match guild {
+                    Some(_) => guild_address,
                     None => None
                 },
-                solution,
+                ore_boost_address,
             ));
 
             // Submit transactions
             self.send_and_confirm(&ixs, ComputeBudget::Fixed(compute_budget), false).await.ok();
         }
+
     }
 
     pub async fn find_hash_par(
@@ -485,12 +177,11 @@ impl Miner {
         cutoff_time: u64,
         cores: u64,
         min_difficulty: u32,
-        resource: &Resource,
     ) -> Solution {
         // Dispatch job to each thread
         let progress_bar = Arc::new(spinner::new_progress_bar());
         let global_best_difficulty = Arc::new(RwLock::new(0u32));
-        progress_bar.set_message(get_action_name(&resource));
+        progress_bar.set_message("Mining...");
         let core_ids = core_affinity::get_core_ids().unwrap();
         let handles: Vec<_> = core_ids
             .into_iter()
@@ -499,7 +190,6 @@ impl Miner {
                 std::thread::spawn({
                     let progress_bar = progress_bar.clone();
                     let mut memory = equix::SolverMemory::new();
-                    let resource = resource.clone(); // Clone resource here
                     move || {
                         // Return if core should not be used
                         if (i.id as u64).ge(&cores) {
@@ -544,8 +234,7 @@ impl Miner {
                                 if timer.elapsed().as_secs().ge(&cutoff_time) {
                                     if i.id == 0 {
                                         progress_bar.set_message(format!(
-                                            "{}... (difficulty {})",
-                                            get_action_name(&resource),
+                                            "Mining... (difficulty {})",
                                             global_best_difficulty,
                                         ));
                                     }
@@ -555,8 +244,7 @@ impl Miner {
                                     }
                                 } else if i.id == 0 {
                                     progress_bar.set_message(format!(
-                                        "{}... (difficulty {}, time {})",
-                                        get_action_name(&resource),
+                                        "Mining... (difficulty {}, time {})",
                                         global_best_difficulty,
                                         format_duration(
                                             cutoff_time.saturating_sub(timer.elapsed().as_secs())
@@ -612,18 +300,12 @@ impl Miner {
         }
     }
 
-    pub async fn should_reset(&self, config: ConfigType) -> bool {
+    pub async fn should_reset(&self, config: Config) -> bool {
         let clock = get_clock(&self.rpc_client).await;
-        match config {
-            ConfigType::General(config) => config.last_reset_at
-                .saturating_add(COAL_EPOCH_DURATION)
-                .saturating_sub(5) // Buffer
-                .le(&clock.unix_timestamp),
-            ConfigType::Wood(config) => config.last_reset_at
-                .saturating_add(WOOD_EPOCH_DURATION)
-                .saturating_sub(5) // Buffer
-                .le(&clock.unix_timestamp),
-        }
+        config.last_reset_at
+            .saturating_add(EPOCH_DURATION)
+            .saturating_sub(5) // Buffer
+            .le(&clock.unix_timestamp)
     }
 
     pub async fn get_cutoff(&self, last_hash_at: i64, duration: i64, buffer_time: u64) -> u64 {
@@ -635,15 +317,40 @@ impl Miner {
             .max(0) as u64
     }
 
-    pub async fn find_bus(&self, resource: Resource) -> Pubkey {
+    pub async fn find_ore_bus(&self) -> Pubkey {
         // Fetch the bus with the largest balance
-        let bus_addresses = get_resource_bus_addresses(&resource);
+        let bus_addresses = ore_api::consts::BUS_ADDRESSES;
         if let Ok(accounts) = self.rpc_client.get_multiple_accounts(&bus_addresses).await {
             let mut top_bus_balance: u64 = 0;
             let mut top_bus = bus_addresses[0];
             for account in accounts {
                 if let Some(account) = account {
-                    if let Ok(bus) = Bus::try_from_bytes(&account.data) {
+                    if let Ok(bus) = ore_api::state::Bus::try_from_bytes(&account.data) {
+                        if bus.rewards.gt(&top_bus_balance) {
+                            top_bus_balance = bus.rewards;
+                            top_bus = bus_addresses[bus.id as usize];
+                        }
+                    }
+
+                }
+            }
+            return top_bus;
+        }
+
+        // Otherwise return a random bus
+        let i = rand::thread_rng().gen_range(0..BUS_COUNT);
+        bus_addresses[i]
+    }
+
+    pub async fn find_bus(&self) -> Pubkey {
+        // Fetch the bus with the largest balance
+        let bus_addresses = coal_api::consts::BUS_ADDRESSES;
+        if let Ok(accounts) = self.rpc_client.get_multiple_accounts(&bus_addresses).await {
+            let mut top_bus_balance: u64 = 0;
+            let mut top_bus = bus_addresses[0];
+            for account in accounts {
+                if let Some(account) = account {
+                    if let Ok(bus) = coal_api::state::Bus::try_from_bytes(&account.data) {
                         if bus.rewards.gt(&top_bus_balance) {
                             top_bus_balance = bus.rewards;
                             top_bus = bus_addresses[bus.id as usize];
@@ -661,20 +368,12 @@ impl Miner {
     }
 }
 
-fn calculate_multiplier(balance: u64, top_balance: u64) -> f64 {
-   1.0 + (balance as f64 / top_balance as f64).min(1.0f64)
-}
-
-fn calculate_tool_multipler(tool: &Option<ToolType>) -> f64 {
-    match tool {
-        Some(tool) => {
-            if tool.durability().gt(&0) {
-                return 1.0 + (tool.multiplier() as f64 / 100.0)
-            }
-            0.0
-        }
-        None => 0.0,
+// TODO
+fn calculate_multiplier(balance: u64, total_balance: u64) -> f64 {
+    if total_balance == 0 {
+        return 0.0;
     }
+    16.0 * (balance as f64) / (total_balance as f64)
 }
 
 fn calculate_stake_multiplier(stake: u64, total_stake: u64, total_multiplier: u64) -> f64 {
@@ -688,14 +387,4 @@ fn format_duration(seconds: u32) -> String {
     let minutes = seconds / 60;
     let remaining_seconds = seconds % 60;
     format!("{:02}:{:02}", minutes, remaining_seconds)
-}
-
-fn get_action_name(resource: &Resource) -> String {
-    match resource {
-        Resource::Coal => "Mining".to_string(),
-        Resource::Ore => "Mining".to_string(),
-        Resource::Ingots => "Smelting".to_string(),
-        Resource::Wood => "Chopping".to_string(),
-        Resource::Chromium => "Reprocessing".to_string(),
-    }
 }

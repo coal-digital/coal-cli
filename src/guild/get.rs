@@ -20,28 +20,28 @@ impl Miner {
         let accounts = self.rpc_client.get_multiple_accounts(&[member.0, config.0]).await.unwrap();
         let config = deserialize_config(&accounts[1].as_ref().unwrap().data);
         
-        println!("Total network stake: {}", amount_u64_to_string(config.total_stake));
-        println!("Total staking multiplier: {}x", config.total_multiplier.to_string());
+        println!("Total network stake: {}\n", amount_u64_to_string(config.total_stake));
+        println!("Total staking multiplier: {}x\n", config.total_multiplier.to_string());
 
         if accounts[0].is_some() {
             let member = deserialize_member(&accounts[0].as_ref().unwrap().data);
-            println!("Member stake: {}", amount_u64_to_string(member.total_stake));
-            println!("Member is active: {}", if member.is_active == 1 { "Yes" } else { "No" });
-            println!("Member last stake at: {}", member.last_stake_at);
-            println!("Member multiplier: {}x", calculate_multiplier(config.total_stake, config.total_multiplier, member.total_stake));
+            println!("Member stake: {}\n", amount_u64_to_string(member.total_stake));
+            println!("Member is active: {}\n", if member.is_active == 1 { "Yes" } else { "No" });
+            println!("Member last stake at: {}\n", member.last_stake_at);
+            println!("Member multiplier: {}x\n", calculate_multiplier(config.total_stake, config.total_multiplier, member.total_stake));
             
             if member.guild.ne(&solana_program::system_program::id()) {
                 let guild_data = self.rpc_client.get_account_data(&member.guild).await.unwrap();
                 let guild = deserialize_guild(&guild_data);
-                println!("Guild: {}", member.guild.to_string());
-                println!("Guild total stake: {}", amount_u64_to_string(guild.total_stake));
-                println!("Guild multiplier: {}", calculate_multiplier(config.total_stake, config.total_multiplier, guild.total_stake));
-                println!("Guild last stake at: {}", guild.last_stake_at);
+                println!("Guild: {}\n", member.guild.to_string());
+                println!("Guild total stake: {}\n", amount_u64_to_string(guild.total_stake));
+                println!("Guild multiplier: {}x\n", calculate_multiplier(config.total_stake, config.total_multiplier, guild.total_stake));
+                println!("Guild last stake at: {}\n", guild.last_stake_at);
             } else {
-                println!("Guild: None");
+                println!("Guild: None\n");
             }
         } else {
-            println!("Member: None");
+            println!("Member: None\n");
         }
 
     }

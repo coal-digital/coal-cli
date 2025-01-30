@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use colored::*;
-use coal_api::consts::COAL_MINT_ADDRESS;
+use coal_api::consts::MINT_ADDRESS;
 use solana_program::pubkey::Pubkey;
 use solana_sdk::signature::Signer;
 use spl_token::amount_to_ui_amount;
@@ -29,7 +29,7 @@ impl Miner {
                 let wallet = Pubkey::from_str(&to).expect("Failed to parse wallet address");
                 let benefiary_tokens = spl_associated_token_account::get_associated_token_address(
                     &wallet,
-                    &COAL_MINT_ADDRESS,
+                    &MINT_ADDRESS,
                 );
                 if self
                     .rpc_client
@@ -41,7 +41,7 @@ impl Miner {
                         spl_associated_token_account::instruction::create_associated_token_account(
                             &pubkey,
                             &wallet,
-                            &coal_api::consts::COAL_MINT_ADDRESS,
+                            &MINT_ADDRESS,
                             &spl_token::id(),
                         ),
                     );
